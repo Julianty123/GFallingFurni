@@ -1,0 +1,9 @@
+<component name="libraryTable">
+  <library name="G-Earth-Native-Extension">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../G-Earth-Native-Extension.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
