@@ -18,16 +18,16 @@ import java.util.LinkedList;
 )
 
 public class GFallingFurni extends ExtensionForm {
-    public LinkedList<String> arrayList = new LinkedList(); // LinkedList es mas eficiente que ArrayList
-    public LinkedList<Integer> poisonFurniList = new LinkedList();
-    public LinkedList<Integer> specificFurniList = new LinkedList();
+    public LinkedList<String> arrayList = new LinkedList<>(); // LinkedList is better than ArrayList
+    public LinkedList<Integer> poisonFurniList = new LinkedList<>();
+    public LinkedList<Integer> specificFurniList = new LinkedList<>();
+    //public Thread thread = null;
 
-    public CheckBox checkPoison, checkCoords, checkAutodisable, checkSpecificPoint;
-    public RadioButton radioCoords, radioCurrent, radioSpecificPoint, radioSpecificFurnis;
+    public CheckBox checkPoison, checkCoords, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
+    public RadioButton radioCoords, radioCurrent, radioSpecificPoint;
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
-    public int XCoord, YCoord, XSpecificPoint, YSpecificPoint;
-    public int UserID;
+    public int FurniID, UserID, GetCoordX, GetCoordY, XCoord, YCoord, XSpecificPoint, YSpecificPoint;
 
     @Override
     protected void initExtension() {
@@ -50,20 +50,23 @@ public class GFallingFurni extends ExtensionForm {
             }
         });*/
 
-        // Runs this when the extension GUI is closed
+        // Runs this when the GUI is closed
         primaryStage.setOnCloseRequest(e -> {
-            Platform.runLater(() -> {
-                buttonStart.setText("---OFF---");
-            }); // Platform.exit();
+            Platform.runLater(() -> buttonStart.setText("---OFF---")); // Platform.exit();
             arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true);
         });
 
-        // Se ejecuta cuando el texto del textField cambia
+        // Runs when the text field changes!
         fieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 Integer.parseInt(fieldDelay.getText());
             } catch (NumberFormatException e) {
-                fieldDelay.setText(oldValue);
+                if("".equals(fieldDelay.getText())){
+                    fieldDelay.setText("1");
+                }
+                else {
+                    fieldDelay.setText(oldValue);
+                }
             }
         });
 
@@ -79,7 +82,7 @@ public class GFallingFurni extends ExtensionForm {
         // Intercept the double click on the furni
         intercept(HMessage.Direction.TOSERVER, "UseFurniture", hMessage -> {
             int FurniID = hMessage.getPacket().readInteger();
-            if(radioSpecificFurnis.isSelected()){
+            if(checkSpecificFurni.isSelected()){
                 if(poisonFurniList.contains(FurniID)){
                     String SaySomething = "You cant select this furni because its on the poison list!";
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
@@ -87,104 +90,97 @@ public class GFallingFurni extends ExtensionForm {
                 if(!poisonFurniList.contains(FurniID)){
                     if(!specificFurniList.contains(FurniID)){
                         specificFurniList.add(FurniID);
-                        Platform.runLater(() -> {
-                            radioSpecificFurnis.setText("Specific Furnis (" + specificFurniList.size() + ")");
-                        });
+                        Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + specificFurniList.size() + ")"));
                         String SaySomething = "The furni has been added successfully";
                         sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
                     }
                 }
             }
             if(checkPoison.isSelected()){
-                if(!poisonFurniList.contains(FurniID)){
-                    poisonFurniList.add(FurniID);
-                    Platform.runLater(() -> {
-                        checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")");
-                    });
-                    // Packet Structure
-                    // {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
-                    String SaySomething = "The furni with ID "+ FurniID +" has been added successfully";
-                    sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+                if(!specificFurniList.contains(FurniID)){
+                    if(!poisonFurniList.contains(FurniID)){
+                        poisonFurniList.add(FurniID);
+                        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")"));
+                        // Packet Structure
+                        // {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
+                        String SaySomething = "The furni with ID "+ FurniID +" has been added successfully";
+                        sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+                    }
                 }
-                else{
-                    String SaySomething = "The furni has already been added!";
+                if(specificFurniList.contains(FurniID)){
+                    String SaySomething = "You cant select this furni because its on the specific furni list!";
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
                 }
             }
-        });
-
-        // Runs this instruction when the furni is added to the room
-        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", hMessage -> {
-            try {
-                DoSomething(hMessage);
-            } catch (InterruptedException e) { e.printStackTrace(); }
-        });
-
-        // Runs this instruction when the furni is moved
-        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", hMessage -> {
-            try {
-                DoSomething(hMessage);
-            } catch (InterruptedException e) { e.printStackTrace(); }
         });
 
         intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
             if(checkCoords.isSelected()){
                 XCoord = hMessage.getPacket().readInteger();
                 YCoord = hMessage.getPacket().readInteger();
-                Platform.runLater(() -> {
-                    checkCoords.setText("(" + XCoord + ", " + YCoord + ")");
-                }); // Platform.exit();
+                Platform.runLater(() -> checkCoords.setText("(" + XCoord + ", " + YCoord + ")"));
                 hMessage.setBlocked(true);
                 checkCoords.setSelected(false);
             }
             else if(checkSpecificPoint.isSelected()){
                 XSpecificPoint = hMessage.getPacket().readInteger();
                 YSpecificPoint = hMessage.getPacket().readInteger();
-                Platform.runLater(() -> {
-                    checkSpecificPoint.setText("(" + XSpecificPoint + ", " + YSpecificPoint + ")");
-                }); // Platform.exit();
+                Platform.runLater(() -> checkSpecificPoint.setText("(" + XSpecificPoint + ", " + YSpecificPoint + ")")); // Platform.exit();
                 hMessage.setBlocked(true);
                 checkSpecificPoint.setSelected(false);
             }
         });
+
+        // Runs this instruction when the furni is added to the room
+        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::DoSomething);
+
+        // Runs this instruction when the furni is moved
+        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::DoSomething);
     }
 
-    private void DoSomething(HMessage hMessage) throws InterruptedException {
+    private void DoSomething(HMessage hMessage) {
         if("---ON---".equals(buttonStart.getText())){
-            int FurniID = hMessage.getPacket().readInteger();
+            FurniID = hMessage.getPacket().readInteger();
             int WithoutUse = hMessage.getPacket().readInteger();
-            int GetCoordX = hMessage.getPacket().readInteger();
-            int GetCoordY = hMessage.getPacket().readInteger();
-            System.out.println("...");
+            GetCoordX = hMessage.getPacket().readInteger();
+            GetCoordY = hMessage.getPacket().readInteger();
 
-            System.out.println("Before Delay");
-            Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
-            System.out.println("After Delay");
+            // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep
+            Thread t1 = new Thread(() -> {
+                try {
+                    Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
+                }catch (InterruptedException ignored){}
 
-            // Analizar bien la logica aca tener cuidado
-            if (!poisonFurniList.contains(FurniID)){
-                if(radioCurrent.isSelected()){
-                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
+                if(specificFurniList.size() > 0){
+                    if (specificFurniList.contains(FurniID)){ SitOnTheChair(); }
                 }
-                if(radioCoords.isSelected()){
-                    if(GetCoordX == XCoord && GetCoordY == YCoord){
-                        sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XCoord, YCoord));
-                    }
+                else { // When is equals to 0
+                    if (!poisonFurniList.contains(FurniID)){ SitOnTheChair(); }
                 }
-                if(radioSpecificPoint.isSelected()){
-                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XSpecificPoint, YSpecificPoint));
-                }
-                if(radioSpecificFurnis.isSelected()){
-                    if(specificFurniList.contains(FurniID)){
-                        sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
-                    }
-                }
-                if(checkAutodisable.isSelected()){
-                    Platform.runLater(() -> {
-                        buttonStart.setText("---OFF---");
-                    }); // Platform.exit();
-                }
+            });
+            t1.start(); // Thread started
+        }
+    }
+
+    private void SitOnTheChair(){
+        if(radioCurrent.isSelected()){
+            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
+        }
+        if(radioCoords.isSelected()){
+            if(GetCoordX == XCoord && GetCoordY == YCoord){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XCoord, YCoord));
             }
+        }
+        if(radioSpecificPoint.isSelected()){
+            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XSpecificPoint, YSpecificPoint));
+        }
+        if(checkSpecificFurni.isSelected()){
+            if(specificFurniList.contains(FurniID)){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
+            }
+        }
+        if(checkAutodisable.isSelected()){
+            Platform.runLater(() -> buttonStart.setText("---OFF---"));
         }
     }
 
@@ -197,17 +193,17 @@ public class GFallingFurni extends ExtensionForm {
         }
     }
 
-    public void handleErasePoisons(ActionEvent actionEvent) {
+    /*public synchronized void Hola(Thread thread){
+
+    }*/
+
+    public void handleErasePoisons() {
         poisonFurniList.clear();
-        Platform.runLater(() -> {
-            checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")");
-        }); // Platform.exit();
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")"));
     }
 
     public void handleDeleteSpecific(ActionEvent actionEvent) {
         specificFurniList.clear();
-        Platform.runLater(() -> {
-            radioSpecificFurnis.setText("Specific Furnis (" + specificFurniList.size() + ")");
-        });
+        Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + specificFurniList.size() + ")"));
     }
 }
