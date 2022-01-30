@@ -1,5 +1,7 @@
 import gearth.extensions.ExtensionForm;
 import gearth.extensions.ExtensionInfo;
+import gearth.extensions.parsers.HEntity;
+import gearth.extensions.parsers.HEntityUpdate;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import javafx.application.Platform;
@@ -11,8 +13,8 @@ import java.util.LinkedList;
 
 @ExtensionInfo(
         Title = "GFallingFurni",
-        Description = "Enjoy!",
-        Version = "1.2.0",
+        Description = "Classic extension, enjoy it!",
+        Version = "1.2.1",
         Author = "Julianty"
 )
 
@@ -20,17 +22,33 @@ public class GFallingFurni extends ExtensionForm {
     public LinkedList<String> arrayList = new LinkedList<>(); // LinkedList is better than ArrayList
     public LinkedList<Integer> poisonFurniList = new LinkedList<>();
     public LinkedList<Integer> specificFurniList = new LinkedList<>();
-    //public Thread thread = null;
 
     public CheckBox checkPoison, checkCoords, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
     public RadioButton radioCoords, radioCurrent, radioSpecificPoint;
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
+
+    public String YourName;
+    public int YourIndex = -1, YourCurrentCoordX = -1, YourCurrentCoordY = -1;
     public int FurniID, UserID, GetCoordX, GetCoordY, XCoord, YCoord, XSpecificPoint, YSpecificPoint;
 
     @Override
-    protected void initExtension() {
+    protected void onShow() {
+        // The packet is sent to the server and a response is obtained from the CLIENT !!
+        sendToServer(new HPacket("InfoRetrieve", HMessage.Direction.TOSERVER));
+        // With this it's not necessary to restart the room
+        sendToServer(new HPacket("AvatarExpression", HMessage.Direction.TOSERVER, 0));
+    }
 
+    @Override
+    protected void onHide() {   // Runs this when the GUI is closed
+        Platform.runLater(() -> buttonStart.setText("---OFF---")); // Platform.exit();
+        arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true); YourIndex = -1;
+    }
+
+
+    @Override
+    protected void initExtension() {
         /* Ignore this ...
         arrayList.add("Julianty");
 
@@ -48,12 +66,6 @@ public class GFallingFurni extends ExtensionForm {
             }
         });*/
 
-        // Runs this when the GUI is closed
-        primaryStage.setOnCloseRequest(e -> {
-            Platform.runLater(() -> buttonStart.setText("---OFF---")); // Platform.exit();
-            arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true);
-        });
-
         // Runs when the text field changes!
         fieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
@@ -68,16 +80,23 @@ public class GFallingFurni extends ExtensionForm {
             }
         });
 
-        // The packet is sent to the server and a response is obtained from the CLIENT !!
-        sendToServer(new HPacket("InfoRetrieve", HMessage.Direction.TOSERVER));
-
         // Intercepts the client's response and does something ...
         intercept(HMessage.Direction.TOCLIENT, "UserObject", hMessage -> {
             // Be careful, the data must be obtained in the order of the packet
             UserID = hMessage.getPacket().readInteger();
+            YourName = hMessage.getPacket().readString();
+            System.out.println("YourName: " + YourName);
         });
 
-        // Intercept the double click on the furni
+        // Response of packet AvatarExpression (gets userIndex)
+        intercept(HMessage.Direction.TOCLIENT, "Expression", hMessage -> {
+            // First integer is index in room, second is animation id, i think
+            if(primaryStage.isShowing() && YourIndex == -1){ // this could avoid any bug
+                YourIndex = hMessage.getPacket().readInteger();
+            }
+        });
+
+        // Intercept the double click on the furniture
         intercept(HMessage.Direction.TOSERVER, "UseFurniture", hMessage -> {
             int FurniID = hMessage.getPacket().readInteger();
             if(checkSpecificFurni.isSelected()){
@@ -129,11 +148,68 @@ public class GFallingFurni extends ExtensionForm {
             }
         });
 
+        // Intercept this packet when you enter or restart a room
+        intercept(HMessage.Direction.TOCLIENT, "Users", hMessage -> {
+            try {
+                HPacket hPacket = hMessage.getPacket();
+                HEntity[] roomUsersList = HEntity.parse(hPacket);
+                for (HEntity hEntity: roomUsersList){
+                    if(hEntity.getName().equals(YourName)){    // In another room, the index changes
+                        YourIndex = hEntity.getIndex();
+                    }
+                }
+            } catch (Exception ignored) { }
+        });
+
+        // Intercepts when users in the room move
+        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", hMessage -> {
+            HPacket hPacket = hMessage.getPacket();
+            for (HEntityUpdate hEntityUpdate: HEntityUpdate.parse(hPacket)){
+                try {
+                    int CurrentIndex = hEntityUpdate.getIndex();
+                    if(YourIndex == CurrentIndex){
+                        YourCurrentCoordX = hEntityUpdate.getMovingTo().getX(); YourCurrentCoordY = hEntityUpdate.getMovingTo().getY();
+                        if((GetCoordX == YourCurrentCoordX && GetCoordY == YourCurrentCoordY) && checkAutodisable.isSelected()){
+                            Platform.runLater(() -> buttonStart.setText("---OFF---"));
+                        }
+                    }
+                }
+                catch (Exception ignored) { }
+            }
+        });
+
         // Runs this instruction when the furni is added to the room
         intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::DoSomething);
 
         // Runs this instruction when the furni is moved
         intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::DoSomething);
+
+        // Intercepts when a furni is moved from one place to another with wired!
+        intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", hMessage -> {
+            if("---ON---".equals(buttonStart.getText())){
+                int oldX = hMessage.getPacket().readInteger();
+                int oldY = hMessage.getPacket().readInteger();
+                GetCoordX = hMessage.getPacket().readInteger();
+                GetCoordY = hMessage.getPacket().readInteger();
+                int NotUse = hMessage.getPacket().readInteger();
+                FurniID = hMessage.getPacket().readInteger();   // Moving furniture id
+
+                // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep
+                Thread t1 = new Thread(() -> {
+                    try {
+                        Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
+                    }catch (InterruptedException ignored){}
+
+                    if(specificFurniList.size() > 0){
+                        if (specificFurniList.contains(FurniID)){ SitOnTheChair(); }
+                    }
+                    else { // When is equals to 0
+                        if (!poisonFurniList.contains(FurniID)){ SitOnTheChair(); }
+                    }
+                });
+                t1.start(); // Thread started
+            }
+        });
     }
 
     private void DoSomething(HMessage hMessage) {
@@ -177,9 +253,6 @@ public class GFallingFurni extends ExtensionForm {
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
             }
         }
-        if(checkAutodisable.isSelected()){
-            Platform.runLater(() -> buttonStart.setText("---OFF---"));
-        }
     }
 
     public void handleButtonStart(){
@@ -190,15 +263,6 @@ public class GFallingFurni extends ExtensionForm {
             buttonStart.setText("---OFF---");
         }
     }
-
-    /*public synchronized void Hola(Thread thread){
-        new Thread(() -> {
-        });
-        Thread currentThread = new Thread(()->{
-                });
-                currentThread.start();
-                currentThread.join();
-    }*/
 
     public void handleErasePoisons() {
         poisonFurniList.clear();

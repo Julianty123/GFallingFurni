@@ -19,7 +19,7 @@
     <RadioButton fx:id="radioCoords" layoutX="191.0" layoutY="63.0" mnemonicParsing="false" text="Coords Mode" toggleGroup="$Mode" />
     <Label layoutX="133.0" layoutY="19.0" text="Delay:" />
     <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="179.0" layoutY="14.0" prefHeight="31.0" prefWidth="61.0" text="300" />
-    <CheckBox fx:id="checkAutodisable" layoutX="198.0" layoutY="292.0" mnemonicParsing="false" text="Auto disable" />
+    <CheckBox fx:id="checkAutodisable" layoutX="155.0" layoutY="293.0" mnemonicParsing="false" text="Auto disable when you sit" />
     <RadioButton fx:id="radioSpecificPoint" layoutX="191.0" layoutY="131.0" mnemonicParsing="false" text="Specific Point Mode" toggleGroup="$Mode" />
     <CheckBox fx:id="checkSpecificPoint" layoutX="219.0" layoutY="160.0" mnemonicParsing="false" text="(0, 0)" />
     <CheckBox fx:id="checkPoison" layoutX="15.0" layoutY="94.0" mnemonicParsing="false" text="Poison Furnis (0)" />
