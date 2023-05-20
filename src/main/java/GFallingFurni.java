@@ -2,19 +2,22 @@ import gearth.extensions.ExtensionForm;
 import gearth.extensions.ExtensionInfo;
 import gearth.extensions.parsers.HEntity;
 import gearth.extensions.parsers.HEntityUpdate;
+import gearth.extensions.parsers.HPoint;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.paint.Color;
+
 import java.util.LinkedList;
 
 
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.1",
+        Version = "1.2.2",
         Author = "Julianty"
 )
 
@@ -23,14 +26,14 @@ public class GFallingFurni extends ExtensionForm {
     public LinkedList<Integer> poisonFurniList = new LinkedList<>();
     public LinkedList<Integer> specificFurniList = new LinkedList<>();
 
-    public CheckBox checkPoison, checkCoords, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
-    public RadioButton radioCoords, radioCurrent, radioSpecificPoint;
+    public CheckBox checkPoison, checkEqualsCoords, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
+    public RadioButton radioEqualsCoords, radioCurrent, radioSpecificPoint;
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
 
     public String YourName;
-    public int YourIndex = -1, YourCurrentCoordX = -1, YourCurrentCoordY = -1;
-    public int FurniID, UserID, GetCoordX, GetCoordY, XCoord, YCoord, XSpecificPoint, YSpecificPoint;
+    public int YourIndex = -1;
+    public int FurniID, UserID, newXCoordFurni, newYCoordFurni, xEqualsCoord, yEqualsCoord, xSpecificPoint, ySpecificPoint;
 
     @Override
     protected void onShow() {
@@ -42,7 +45,7 @@ public class GFallingFurni extends ExtensionForm {
 
     @Override
     protected void onHide() {   // Runs this when the GUI is closed
-        Platform.runLater(() -> buttonStart.setText("---OFF---")); // Platform.exit();
+        Platform.runLater(this::turnOffButton); // Platform.exit();
         arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true); YourIndex = -1;
     }
 
@@ -132,17 +135,15 @@ public class GFallingFurni extends ExtensionForm {
         });
 
         intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
-            if(checkCoords.isSelected()){
-                XCoord = hMessage.getPacket().readInteger();
-                YCoord = hMessage.getPacket().readInteger();
-                Platform.runLater(() -> checkCoords.setText("(" + XCoord + ", " + YCoord + ")"));
+            if(checkEqualsCoords.isSelected()){
+                xEqualsCoord = hMessage.getPacket().readInteger();  yEqualsCoord = hMessage.getPacket().readInteger();
+                Platform.runLater(() -> checkEqualsCoords.setText("(" + xEqualsCoord + ", " + yEqualsCoord + ")"));
                 hMessage.setBlocked(true);
-                checkCoords.setSelected(false);
+                checkEqualsCoords.setSelected(false);
             }
             else if(checkSpecificPoint.isSelected()){
-                XSpecificPoint = hMessage.getPacket().readInteger();
-                YSpecificPoint = hMessage.getPacket().readInteger();
-                Platform.runLater(() -> checkSpecificPoint.setText("(" + XSpecificPoint + ", " + YSpecificPoint + ")")); // Platform.exit();
+                xSpecificPoint = hMessage.getPacket().readInteger();    ySpecificPoint = hMessage.getPacket().readInteger();
+                Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")")); // Platform.exit();
                 hMessage.setBlocked(true);
                 checkSpecificPoint.setSelected(false);
             }
@@ -168,9 +169,14 @@ public class GFallingFurni extends ExtensionForm {
                 try {
                     int CurrentIndex = hEntityUpdate.getIndex();
                     if(YourIndex == CurrentIndex){
-                        YourCurrentCoordX = hEntityUpdate.getMovingTo().getX(); YourCurrentCoordY = hEntityUpdate.getMovingTo().getY();
-                        if((GetCoordX == YourCurrentCoordX && GetCoordY == YourCurrentCoordY) && checkAutodisable.isSelected()){
-                            Platform.runLater(() -> buttonStart.setText("---OFF---"));
+                        if(checkAutodisable.isSelected()){
+                            HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
+
+                            if((newXCoordFurni == currentHPoint.getX() && newYCoordFurni == currentHPoint.getY()) ||
+                                    (xEqualsCoord == currentHPoint.getX() && yEqualsCoord == currentHPoint.getY()) ||
+                                    (xSpecificPoint == currentHPoint.getX() && ySpecificPoint == currentHPoint.getY())){
+                                Platform.runLater(this::turnOffButton);
+                            }
                         }
                     }
                 }
@@ -189,8 +195,8 @@ public class GFallingFurni extends ExtensionForm {
             if("---ON---".equals(buttonStart.getText())){
                 int oldX = hMessage.getPacket().readInteger();
                 int oldY = hMessage.getPacket().readInteger();
-                GetCoordX = hMessage.getPacket().readInteger();
-                GetCoordY = hMessage.getPacket().readInteger();
+                newXCoordFurni = hMessage.getPacket().readInteger();
+                newYCoordFurni = hMessage.getPacket().readInteger();
                 int NotUse = hMessage.getPacket().readInteger();
                 FurniID = hMessage.getPacket().readInteger();   // Moving furniture id
 
@@ -216,8 +222,8 @@ public class GFallingFurni extends ExtensionForm {
         if("---ON---".equals(buttonStart.getText())){
             FurniID = hMessage.getPacket().readInteger();
             int WithoutUse = hMessage.getPacket().readInteger();
-            GetCoordX = hMessage.getPacket().readInteger();
-            GetCoordY = hMessage.getPacket().readInteger();
+            newXCoordFurni = hMessage.getPacket().readInteger();
+            newYCoordFurni = hMessage.getPacket().readInteger();
 
             // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep
             Thread t1 = new Thread(() -> {
@@ -238,30 +244,34 @@ public class GFallingFurni extends ExtensionForm {
 
     private void SitOnTheChair(){
         if(radioCurrent.isSelected()){
-            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
+            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
         }
-        if(radioCoords.isSelected()){
-            if(GetCoordX == XCoord && GetCoordY == YCoord){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XCoord, YCoord));
+        if(radioEqualsCoords.isSelected()){
+            if(newXCoordFurni == xEqualsCoord && newYCoordFurni == yEqualsCoord){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xEqualsCoord, yEqualsCoord));
             }
         }
         if(radioSpecificPoint.isSelected()){
-            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, XSpecificPoint, YSpecificPoint));
+            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
         }
         if(checkSpecificFurni.isSelected()){
             if(specificFurniList.contains(FurniID)){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, GetCoordX, GetCoordY));
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
             }
         }
     }
 
     public void handleButtonStart(){
         if("---OFF---".equals(buttonStart.getText())){
-            buttonStart.setText("---ON---");
+            buttonStart.setText("---ON---");    buttonStart.setTextFill(Color.GREEN);
         }
         else {
-            buttonStart.setText("---OFF---");
+            turnOffButton();
         }
+    }
+
+    public void turnOffButton(){
+        buttonStart.setText("---OFF---"); buttonStart.setTextFill(Color.RED);
     }
 
     public void handleErasePoisons() {

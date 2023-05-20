@@ -8,15 +8,15 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="353.0" prefWidth="372.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
-    <Button fx:id="buttonStart" layoutX="193.0" layoutY="201.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="73.0" prefWidth="120.0" text="---OFF---" />
-    <CheckBox fx:id="checkCoords" layoutX="219.0" layoutY="91.0" mnemonicParsing="false" text="(0, 0)" />
+<AnchorPane prefHeight="353.0" prefWidth="372.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+    <Button fx:id="buttonStart" layoutX="203.0" layoutY="208.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="63.0" prefWidth="103.0" text="---OFF---" textFill="RED" />
+    <CheckBox fx:id="checkEqualsCoords" layoutX="219.0" layoutY="91.0" mnemonicParsing="false" text="(0, 0)" />
     <RadioButton fx:id="radioCurrent" layoutX="24.0" layoutY="63.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Current Mode">
         <toggleGroup>
             <ToggleGroup fx:id="Mode" />
         </toggleGroup>
     </RadioButton>
-    <RadioButton fx:id="radioCoords" layoutX="191.0" layoutY="63.0" mnemonicParsing="false" text="Coords Mode" toggleGroup="$Mode" />
+    <RadioButton fx:id="radioEqualsCoords" layoutX="191.0" layoutY="63.0" mnemonicParsing="false" text="Equals Coords Mode" toggleGroup="$Mode" />
     <Label layoutX="133.0" layoutY="19.0" text="Delay:" />
     <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="179.0" layoutY="14.0" prefHeight="31.0" prefWidth="61.0" text="300" />
     <CheckBox fx:id="checkAutodisable" layoutX="155.0" layoutY="293.0" mnemonicParsing="false" text="Auto disable when you sit" />
