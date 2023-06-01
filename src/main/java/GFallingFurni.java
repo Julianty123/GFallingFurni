@@ -10,18 +10,24 @@ import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
+import org.jnativehook.GlobalScreen;
+import org.jnativehook.NativeHookException;
+import org.jnativehook.keyboard.NativeKeyEvent;
+import org.jnativehook.keyboard.NativeKeyListener;
 
 import java.util.LinkedList;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.logging.LogManager;
 
 
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.2",
+        Version = "1.2.3",
         Author = "Julianty"
 )
 
-public class GFallingFurni extends ExtensionForm {
+public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public LinkedList<String> arrayList = new LinkedList<>(); // LinkedList is better than ArrayList
     public LinkedList<Integer> poisonFurniList = new LinkedList<>();
     public LinkedList<Integer> specificFurniList = new LinkedList<>();
@@ -35,40 +41,66 @@ public class GFallingFurni extends ExtensionForm {
     public int YourIndex = -1;
     public int FurniID, UserID, newXCoordFurni, newYCoordFurni, xEqualsCoord, yEqualsCoord, xSpecificPoint, ySpecificPoint;
 
+
+    @Override
+    public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
+
+    @Override
+    public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
+        if(NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()).equals("Ctrl")){
+            Platform.runLater(() -> {
+                buttonStart.setText("---ON---"); buttonStart.setTextFill(Color.GREEN);
+            });
+        }
+    }
+
+    @Override
+    public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
+        if(NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()).equals("Ctrl")){
+            Platform.runLater(() -> turnOffButton());
+        }
+    }
+
     @Override
     protected void onShow() {
         // The packet is sent to the server and a response is obtained from the CLIENT !!
         sendToServer(new HPacket("InfoRetrieve", HMessage.Direction.TOSERVER));
         // With this it's not necessary to restart the room
         sendToServer(new HPacket("AvatarExpression", HMessage.Direction.TOSERVER, 0));
+
+        LogManager.getLogManager().reset();
+        try {
+            if(!GlobalScreen.isNativeHookRegistered()){
+                GlobalScreen.registerNativeHook();
+                System.out.println("Hook enabled");
+            }
+        }
+        catch (NativeHookException ex) {
+            System.err.println("There was a problem registering the native hook.");
+            System.err.println(ex.getMessage());
+
+            System.exit(1);
+        }
+        GlobalScreen.addNativeKeyListener(GFallingFurni.this);
     }
 
     @Override
     protected void onHide() {   // Runs this when the GUI is closed
         Platform.runLater(this::turnOffButton); // Platform.exit();
         arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true); YourIndex = -1;
+
+        try {
+            GlobalScreen.unregisterNativeHook();
+            System.out.println("Hook disabled");
+        } catch (NativeHookException | RejectedExecutionException nativeHookException) {
+            nativeHookException.printStackTrace();
+        }
+        GlobalScreen.removeNativeKeyListener(this);
     }
 
 
     @Override
     protected void initExtension() {
-        /* Ignore this ...
-        arrayList.add("Julianty");
-
-        // Runs when the extension GUI is opened
-        primaryStage.setOnShowing(e -> {
-            if(!arrayList.contains(NameUser)){
-                Alert alert = new Alert(Alert.AlertType.WARNING);
-                alert.setTitle("Warning!");
-                alert.setHeaderText("You're not on the list!");
-                alert.setContentText("Sorry, but you can't use this module, i don't want cheating people.");
-
-                alert.showAndWait();
-                Platform.exit(); // Ignore, i don't really understand so good and i don't know if this is necessary
-                System.exit(0);
-            }
-        });*/
-
         // Runs when the text field changes!
         fieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
             try {

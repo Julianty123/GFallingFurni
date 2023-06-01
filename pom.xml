@@ -87,6 +87,11 @@
             <artifactId>G-Earth</artifactId>
             <version>1.5.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.1stleg</groupId> <!-- com.github.kwhat -->
+            <artifactId>jnativehook</artifactId>
+            <version>2.1.0</version>    <!-- 2.2.2 -->
+        </dependency>
     </dependencies>
 
 </project>
