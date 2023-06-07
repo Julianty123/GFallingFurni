@@ -131,40 +131,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
         });
 
-        // Intercept the double click on the furniture
-        intercept(HMessage.Direction.TOSERVER, "UseFurniture", hMessage -> {
-            int FurniID = hMessage.getPacket().readInteger();
-            if(checkSpecificFurni.isSelected()){
-                if(poisonFurniList.contains(FurniID)){
-                    String SaySomething = "You cant select this furni because its on the poison list!";
-                    sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
-                }
-                if(!poisonFurniList.contains(FurniID)){
-                    if(!specificFurniList.contains(FurniID)){
-                        specificFurniList.add(FurniID);
-                        Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + specificFurniList.size() + ")"));
-                        String SaySomething = "The furni has been added successfully";
-                        sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
-                    }
-                }
-            }
-            if(checkPoison.isSelected()){
-                if(!specificFurniList.contains(FurniID)){
-                    if(!poisonFurniList.contains(FurniID)){
-                        poisonFurniList.add(FurniID);
-                        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")"));
-                        // Packet Structure
-                        // {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
-                        String SaySomething = "The furni with ID "+ FurniID +" has been added successfully";
-                        sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
-                    }
-                }
-                if(specificFurniList.contains(FurniID)){
-                    String SaySomething = "You cant select this furni because its on the specific furni list!";
-                    sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
-                }
-            }
-        });
+        intercept(HMessage.Direction.TOSERVER, "ClickFurni", this::methodOneorDoubleClick);
+        intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneorDoubleClick);
 
         intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
             if(checkEqualsCoords.isSelected()){
@@ -248,6 +216,40 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 t1.start(); // Thread started
             }
         });
+    }
+
+    private void methodOneorDoubleClick(HMessage hMessage) {
+        int furniId = hMessage.getPacket().readInteger();
+        if(checkSpecificFurni.isSelected()){
+            if(poisonFurniList.contains(furniId)){
+                String SaySomething = "You cant select this furni because its on the poison list!";
+                sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+            }
+            if(!poisonFurniList.contains(furniId)){
+                if(!specificFurniList.contains(furniId)){
+                    specificFurniList.add(furniId);
+                    Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + specificFurniList.size() + ")"));
+                    String SaySomething = "The furni has been added successfully";
+                    sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+                }
+            }
+        }
+        if(checkPoison.isSelected()){
+            if(!specificFurniList.contains(furniId)){
+                if(!poisonFurniList.contains(furniId)){
+                    poisonFurniList.add(furniId);
+                    Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + poisonFurniList.size() + ")"));
+                    // Packet Structure
+                    // {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
+                    String SaySomething = "The furni with ID "+ furniId +" has been added successfully";
+                    sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+                }
+            }
+            if(specificFurniList.contains(furniId)){
+                String SaySomething = "You cant select this furni because its on the specific furni list!";
+                sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, UserID, SaySomething, 0, 34, 0, -1, UserID));
+            }
+        }
     }
 
     private void DoSomething(HMessage hMessage) {

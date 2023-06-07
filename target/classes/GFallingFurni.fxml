@@ -8,7 +8,7 @@
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
 
-<AnchorPane prefHeight="353.0" prefWidth="372.0" xmlns="http://javafx.com/javafx/18" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+<AnchorPane prefHeight="353.0" prefWidth="372.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
     <Button fx:id="buttonStart" layoutX="204.0" layoutY="222.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="63.0" prefWidth="103.0" text="---OFF---" textFill="RED" />
     <CheckBox fx:id="checkEqualsCoords" layoutX="219.0" layoutY="91.0" mnemonicParsing="false" text="(0, 0)" />
     <RadioButton fx:id="radioCurrent" layoutX="24.0" layoutY="63.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Current Mode">
@@ -19,12 +19,12 @@
     <RadioButton fx:id="radioEqualsCoords" layoutX="191.0" layoutY="63.0" mnemonicParsing="false" text="Equals Coords Mode" toggleGroup="$Mode" />
     <Label layoutX="133.0" layoutY="19.0" text="Delay:" />
     <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="179.0" layoutY="14.0" prefHeight="31.0" prefWidth="61.0" text="300" />
-    <CheckBox fx:id="checkAutodisable" layoutX="175.0" layoutY="299.0" mnemonicParsing="false" text="Auto disable when you sit" />
+    <CheckBox fx:id="checkAutodisable" layoutX="156.0" layoutY="300.0" mnemonicParsing="false" text="Auto disable when you sit" />
     <RadioButton fx:id="radioSpecificPoint" layoutX="191.0" layoutY="131.0" mnemonicParsing="false" text="Specific Point Mode" toggleGroup="$Mode" />
     <CheckBox fx:id="checkSpecificPoint" layoutX="219.0" layoutY="160.0" mnemonicParsing="false" text="(0, 0)" />
     <CheckBox fx:id="checkPoison" layoutX="15.0" layoutY="94.0" mnemonicParsing="false" text="Poison Furnis (0)" />
     <Button layoutX="25.0" layoutY="171.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="73.0" prefWidth="118.0" text="Erase Poisons" />
     <Button fx:id="buttonDeleteSpecific" layoutX="24.0" layoutY="256.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="73.0" prefWidth="120.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
     <CheckBox fx:id="checkSpecificFurni" layoutX="15.0" layoutY="126.0" mnemonicParsing="false" text="Specific Furnis (0)" />
-   <Label layoutX="203.0" layoutY="195.0" text="Hold Ctrl to turn on" />
+   <Label layoutX="200.0" layoutY="195.0" text="Hold Ctrl to turn on" />
 </AnchorPane>
