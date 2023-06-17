@@ -15,6 +15,7 @@ import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.LogManager;
@@ -32,15 +33,18 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public LinkedList<Integer> poisonFurniList = new LinkedList<>();
     public LinkedList<Integer> specificFurniList = new LinkedList<>();
 
-    public CheckBox checkPoison, checkEqualsCoords, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
+    public CheckBox checkPoison, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
     public RadioButton radioEqualsCoords, radioCurrent, radioSpecificPoint;
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
 
     public String YourName;
     public int YourIndex = -1;
-    public int FurniID, UserID, newXCoordFurni, newYCoordFurni, xEqualsCoord, yEqualsCoord, xSpecificPoint, ySpecificPoint;
-
+    public int FurniID, UserID, newXCoordFurni, newYCoordFurni, xSpecificPoint, ySpecificPoint;
+    public ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
+    public HPoint walkTo;
+    public ToggleGroup Mode;
+    public RadioButton radioCoordFurni, radioWalk;
 
     @Override
     public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
@@ -87,7 +91,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     @Override
     protected void onHide() {   // Runs this when the GUI is closed
         Platform.runLater(this::turnOffButton); // Platform.exit();
-        arrayList.clear(); poisonFurniList.clear(); radioCurrent.setSelected(true); YourIndex = -1;
+        arrayList.clear(); poisonFurniList.clear();
+        radioCurrent.setSelected(true);
+        YourIndex = -1;
 
         try {
             GlobalScreen.unregisterNativeHook();
@@ -101,6 +107,23 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     @Override
     protected void initExtension() {
+        Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
+            RadioButton radioMode = (RadioButton) toggle.getToggleGroup().getSelectedToggle();
+            String currentTxtRadio = radioMode.getText();
+            if(currentTxtRadio.contains("Equals")){
+                radioCoordFurni.setDisable(false);   radioWalk.setDisable(false);
+            }
+            else{
+                radioCoordFurni.setDisable(true);    radioWalk.setDisable(true);
+            }
+        });
+
+        radioCoordFurni.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
+            if(radioCoordFurni.isSelected()){
+                listEqualsCoords.clear();   radioCoordFurni.setText("CoordFurni (0)");
+            }
+        });
+
         // Runs when the text field changes!
         fieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
@@ -120,7 +143,6 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             // Be careful, the data must be obtained in the order of the packet
             UserID = hMessage.getPacket().readInteger();
             YourName = hMessage.getPacket().readString();
-            System.out.println("YourName: " + YourName);
         });
 
         // Response of packet AvatarExpression (gets userIndex)
@@ -135,17 +157,26 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneorDoubleClick);
 
         intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
-            if(checkEqualsCoords.isSelected()){
+            /*if(checkEqualsCoords.isSelected()){
                 xEqualsCoord = hMessage.getPacket().readInteger();  yEqualsCoord = hMessage.getPacket().readInteger();
-                Platform.runLater(() -> checkEqualsCoords.setText("(" + xEqualsCoord + ", " + yEqualsCoord + ")"));
-                hMessage.setBlocked(true);
-                checkEqualsCoords.setSelected(false);
+
             }
-            else if(checkSpecificPoint.isSelected()){
+            else */
+            if(checkSpecificPoint.isSelected()){
                 xSpecificPoint = hMessage.getPacket().readInteger();    ySpecificPoint = hMessage.getPacket().readInteger();
                 Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")")); // Platform.exit();
                 hMessage.setBlocked(true);
                 checkSpecificPoint.setSelected(false);
+            }
+            else if(radioCoordFurni.isSelected() && !radioCoordFurni.isDisable()){
+                listEqualsCoords.add(new HPoint(hMessage.getPacket().readInteger(), hMessage.getPacket().readInteger()));
+                Platform.runLater(() -> radioCoordFurni.setText("CoordFurni (" + listEqualsCoords.size() + ")"));
+                hMessage.setBlocked(true);
+            }
+            else if(radioWalk.isSelected() && !radioWalk.isDisable()){
+                walkTo = new HPoint(hMessage.getPacket().readInteger(), hMessage.getPacket().readInteger());
+                Platform.runLater(() -> radioWalk.setText("Walk to (" + walkTo.getX() + ", " + walkTo.getY() + ")"));
+                radioWalk.setSelected(false);   hMessage.setBlocked(true);
             }
         });
 
@@ -172,10 +203,13 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                         if(checkAutodisable.isSelected()){
                             HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
 
-                            if((newXCoordFurni == currentHPoint.getX() && newYCoordFurni == currentHPoint.getY()) ||
-                                    (xEqualsCoord == currentHPoint.getX() && yEqualsCoord == currentHPoint.getY()) ||
-                                    (xSpecificPoint == currentHPoint.getX() && ySpecificPoint == currentHPoint.getY())){
-                                Platform.runLater(this::turnOffButton);
+                            for(HPoint equalsCoords: listEqualsCoords){
+                                if((newXCoordFurni == currentHPoint.getX() && newYCoordFurni == currentHPoint.getY()) ||
+                                        (equalsCoords.getX() == currentHPoint.getX() && equalsCoords.getY() == currentHPoint.getY()) ||
+                                        (xSpecificPoint == currentHPoint.getX() && ySpecificPoint == currentHPoint.getY())){
+                                    Platform.runLater(this::turnOffButton);
+                                    break;
+                                }
                             }
                         }
                     }
@@ -255,7 +289,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     private void DoSomething(HMessage hMessage) {
         if("---ON---".equals(buttonStart.getText())){
             FurniID = hMessage.getPacket().readInteger();
-            int WithoutUse = hMessage.getPacket().readInteger();
+            int withOutUse = hMessage.getPacket().readInteger();
             newXCoordFurni = hMessage.getPacket().readInteger();
             newYCoordFurni = hMessage.getPacket().readInteger();
 
@@ -277,17 +311,24 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     }
 
     private void SitOnTheChair(){
-        if(radioCurrent.isSelected()){
+        RadioButton radioCurrent = (RadioButton) Mode.getSelectedToggle();
+        String txtRadio = radioCurrent.getText();
+
+        if(txtRadio.contains("Current")){
             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
         }
-        if(radioEqualsCoords.isSelected()){
-            if(newXCoordFurni == xEqualsCoord && newYCoordFurni == yEqualsCoord){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xEqualsCoord, yEqualsCoord));
+        else if(txtRadio.contains("Equals")){
+            for(HPoint equalsCoords: listEqualsCoords){
+                if(newXCoordFurni == equalsCoords.getX() && newYCoordFurni == equalsCoords.getY()){
+                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, walkTo.getX(), walkTo.getY()));
+                    break;
+                }
             }
         }
-        if(radioSpecificPoint.isSelected()){
+        else if(txtRadio.contains("Specific")){
             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
         }
+
         if(checkSpecificFurni.isSelected()){
             if(specificFurniList.contains(FurniID)){
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));

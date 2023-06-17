@@ -7,24 +7,32 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
 
-<AnchorPane prefHeight="353.0" prefWidth="372.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
-    <Button fx:id="buttonStart" layoutX="204.0" layoutY="222.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="63.0" prefWidth="103.0" text="---OFF---" textFill="RED" />
-    <CheckBox fx:id="checkEqualsCoords" layoutX="219.0" layoutY="91.0" mnemonicParsing="false" text="(0, 0)" />
-    <RadioButton fx:id="radioCurrent" layoutX="24.0" layoutY="63.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Current Mode">
-        <toggleGroup>
-            <ToggleGroup fx:id="Mode" />
-        </toggleGroup>
-    </RadioButton>
-    <RadioButton fx:id="radioEqualsCoords" layoutX="191.0" layoutY="63.0" mnemonicParsing="false" text="Equals Coords Mode" toggleGroup="$Mode" />
+<AnchorPane prefHeight="395.0" prefWidth="406.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+    <Pane layoutX="194.0" layoutY="86.0" prefHeight="81.0" prefWidth="199.0" style="-fx-border-color: black;">
+        <RadioButton fx:id="radioWalk" disable="true" layoutX="58.0" layoutY="50.0" mnemonicParsing="false" text="Walk to (-1, -1)">
+           <toggleGroup>
+               <ToggleGroup fx:id="Em" />
+           </toggleGroup>
+        </RadioButton>
+        <RadioButton fx:id="radioCoordFurni" disable="true" layoutX="39.0" layoutY="19.0" mnemonicParsing="false" selected="true" text="CoordFurni (0)" toggleGroup="$Em" />
+        <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" style="-fx-background-color: #f4f4f4;" text="Equals Coords Mode">
+          <toggleGroup>
+              <ToggleGroup fx:id="Mode" />
+          </toggleGroup>
+        </RadioButton>
+    </Pane>
+    <Button fx:id="buttonStart" layoutX="222.0" layoutY="280.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="63.0" prefWidth="103.0" text="---OFF---" textFill="RED" />
+    <RadioButton fx:id="radioCurrent" layoutX="24.0" layoutY="63.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Current Mode" toggleGroup="$Mode" />
     <Label layoutX="133.0" layoutY="19.0" text="Delay:" />
     <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="179.0" layoutY="14.0" prefHeight="31.0" prefWidth="61.0" text="300" />
-    <CheckBox fx:id="checkAutodisable" layoutX="156.0" layoutY="300.0" mnemonicParsing="false" text="Auto disable when you sit" />
-    <RadioButton fx:id="radioSpecificPoint" layoutX="191.0" layoutY="131.0" mnemonicParsing="false" text="Specific Point Mode" toggleGroup="$Mode" />
-    <CheckBox fx:id="checkSpecificPoint" layoutX="219.0" layoutY="160.0" mnemonicParsing="false" text="(0, 0)" />
+    <CheckBox fx:id="checkAutodisable" layoutX="174.0" layoutY="358.0" mnemonicParsing="false" text="Auto disable when you sit" />
+    <RadioButton fx:id="radioSpecificPoint" layoutX="209.0" layoutY="182.0" mnemonicParsing="false" text="Specific Point Mode" toggleGroup="$Mode" />
+    <CheckBox fx:id="checkSpecificPoint" layoutX="237.0" layoutY="212.0" mnemonicParsing="false" text="(0, 0)" />
     <CheckBox fx:id="checkPoison" layoutX="15.0" layoutY="94.0" mnemonicParsing="false" text="Poison Furnis (0)" />
     <Button layoutX="25.0" layoutY="171.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="73.0" prefWidth="118.0" text="Erase Poisons" />
     <Button fx:id="buttonDeleteSpecific" layoutX="24.0" layoutY="256.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="73.0" prefWidth="120.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
     <CheckBox fx:id="checkSpecificFurni" layoutX="15.0" layoutY="126.0" mnemonicParsing="false" text="Specific Furnis (0)" />
-   <Label layoutX="200.0" layoutY="195.0" text="Hold Ctrl to turn on" />
+   <Label layoutX="218.0" layoutY="249.0" text="Hold Ctrl to turn on" />
 </AnchorPane>
