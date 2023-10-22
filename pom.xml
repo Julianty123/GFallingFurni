@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>gearthextensions</groupId>
+    <groupId>juliantyextensions</groupId>
     <artifactId>GFallingFurni</artifactId>
     <packaging>jar</packaging>
     <version>0.1</version>
@@ -14,7 +14,7 @@
             <!-- Embedded FXML and CSS resources -->
             <resource>
                 <filtering>false</filtering>
-                <directory>src/main/java</directory>
+                <directory>src/main/resources</directory> <!-- /java -->
                 <includes>
                     <include>**/*.fxml</include>
                     <include>**/*.css</include>
@@ -31,12 +31,12 @@
                     <outputDirectory>${project.build.directory}/bin</outputDirectory>
                     <archive>
                         <manifest>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
                             <addClasspath>true</addClasspath>
                             <mainClass>GFallingFurniLauncher</mainClass>
                             <useUniqueVersions>false</useUniqueVersions>
                             <classpathPrefix>lib/</classpathPrefix>
-                            <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                            <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
                     <finalName>${project.artifactId}</finalName>
@@ -85,13 +85,22 @@
         <dependency>
             <groupId>G-Earth</groupId>
             <artifactId>G-Earth</artifactId>
-            <version>1.5.2</version>
+            <version>1.5.3</version>
         </dependency>
         <dependency>
             <groupId>com.1stleg</groupId> <!-- com.github.kwhat -->
             <artifactId>jnativehook</artifactId>
             <version>2.1.0</version>    <!-- 2.2.2 -->
         </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20230227</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.11.0</version>
+        </dependency>
     </dependencies>
-
 </project>

@@ -2,6 +2,7 @@ import gearth.extensions.ExtensionForm;
 import gearth.extensions.ExtensionInfo;
 import gearth.extensions.parsers.HEntity;
 import gearth.extensions.parsers.HEntityUpdate;
+import gearth.extensions.parsers.HFloorItem;
 import gearth.extensions.parsers.HPoint;
 import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
@@ -10,28 +11,34 @@ import javafx.application.Platform;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
 import org.jnativehook.keyboard.NativeKeyListener;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.apache.commons.io.IOUtils;
 
-import java.util.ArrayList;
+import java.net.URL;
+import java.net.URLConnection;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.LogManager;
-
 
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.4",
+        Version = "1.2.5",
         Author = "Julianty"
 )
 
 public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
-    public ArrayList<Integer> listPoisonFurniture = new ArrayList<>();
-    public ArrayList<Integer> listSpecificFurniture = new ArrayList<>();
+    public HashSet<Integer> listPoisonFurniture = new HashSet<>(); // Dont allow duplicates elements
+    public ArrayList<Integer> listSpecificFurniture = new ArrayList<>(); // HashSet
     public ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
 
     public ToggleGroup Mode;
@@ -44,6 +51,31 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public String yourName;
     public int yourIndex = -1;
     public int userId, newXCoordFurni, newYCoordFurni, xSpecificPoint, ySpecificPoint;
+
+    private static final HashMap<String, String> hostToDomain = new HashMap<>();
+    static {
+        hostToDomain.put("game-es.habbo.com", "https://www.habbo.es/gamedata/furnidata_json/1");
+        hostToDomain.put("game-br.habbo.com", "https://www.habbo.com.br/gamedata/furnidata_json/1");
+        hostToDomain.put("game-tr.habbo.com", "https://www.habbo.com.tr/gamedata/furnidata_json/1");
+        hostToDomain.put("game-us.habbo.com", "https://www.habbo.com/gamedata/furnidata_json/1");
+        hostToDomain.put("game-de.habbo.com", "https://www.habbo.de/gamedata/furnidata_json/1");
+        hostToDomain.put("game-fi.habbo.com", "https://www.habbo.fi/gamedata/furnidata_json/1");
+        hostToDomain.put("game-fr.habbo.com", "https://www.habbo.fr/gamedata/furnidata_json/1");
+        hostToDomain.put("game-it.habbo.com", "https://www.habbo.it/gamedata/furnidata_json/1");
+        hostToDomain.put("game-nl.habbo.com", "https://www.habbo.nl/gamedata/furnidata_json/1");
+        hostToDomain.put("game-s2.habbo.com", "https://sandbox.habbo.com/gamedata/furnidata_json/1");
+    }
+
+    private static final HashMap<String, Integer> mapPoisonClassnameToUniqueId = new HashMap<>();
+    static {
+        mapPoisonClassnameToUniqueId.put("hween13_tile1", -1);  // Teleport pica roja
+        mapPoisonClassnameToUniqueId.put("hween13_tile2", -1);  // Teleport pica negra
+        mapPoisonClassnameToUniqueId.put("bb_rnd_tele", -1); // Teleport banzai
+    }
+
+    public AnchorPane anchorPane;
+    public Label labelStatus;
+
 
     @Override
     public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
@@ -102,6 +134,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     @Override
     protected void initExtension() {
+        onConnect((host, port, APIVersion, versionClient, client) -> getGameData(host)); // Example: host = game-fr.habbo.com
+
         Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
             RadioButton radioMode = (RadioButton) toggle.getToggleGroup().getSelectedToggle();
             String currentTxtRadio = radioMode.getText();
@@ -188,8 +222,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             HPacket hPacket = hMessage.getPacket();
             for (HEntityUpdate hEntityUpdate: HEntityUpdate.parse(hPacket)){
                 try {
-                    int CurrentIndex = hEntityUpdate.getIndex();
-                    if(yourIndex == CurrentIndex){
+                    int currentIndex = hEntityUpdate.getIndex();
+                    if(yourIndex == currentIndex){
                         if(checkAutodisable.isSelected()){
                             HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
 
@@ -205,6 +239,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 catch (Exception ignored) { }
             }
         });
+
+        intercept(HMessage.Direction.TOCLIENT, "Objects", this::handleObjects);
 
         // Runs this instruction when the furni is added to the room
         intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::DoSomething);
@@ -225,12 +261,54 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         });
     }
 
+    private void handleObjects(HMessage hMessage){
+        HPacket packet = hMessage.getPacket();
+        for (HFloorItem hFloorItem: HFloorItem.parse(packet)){
+            try{
+                if(mapPoisonClassnameToUniqueId.containsValue(hFloorItem.getTypeId())) listPoisonFurniture.add(hFloorItem.getId());
+            }catch (Exception ignored){}
+        }
+
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
+    }
+
+    private void getGameData(String host){
+        new Thread(() -> {
+            try{
+                String url = hostToDomain.get(host); // "https://assets.habboon.pw/nitro//gamedata/FurnitureData.json";
+                System.out.println("Getting game-data from: " + url);
+                URLConnection connection = (new URL(url)).openConnection();
+                connection.setRequestProperty("User-Agent", "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.11 (KHTML, like Gecko) Chrome/23.0.1271.95 Safari/537.11");
+                connection.connect();
+                JSONObject object = new JSONObject(IOUtils.toString(connection.getInputStream(), StandardCharsets.UTF_8));
+
+                JSONArray floorJson = object.getJSONObject("roomitemtypes").getJSONArray("furnitype");
+                floorJson.forEach(o -> {
+                    JSONObject item = (JSONObject)o;
+                    int id = item.getInt("id"); // typeId or UniqueId
+                    String classname = item.getString("classname");
+
+                    // replace -1 with the real id
+                    if(mapPoisonClassnameToUniqueId.containsKey(classname)) mapPoisonClassnameToUniqueId.put(classname, id);
+                });
+
+                Platform.runLater(()-> labelStatus.setText(labelStatus.getText() + url));
+                sendToServer(new HPacket("{out:GetHeightMap}")); // Get Objects, Items, etc. Without restart the room
+
+            }catch (Exception e){
+                Platform.runLater(()-> labelStatus.setText(labelStatus.getText() + e.getMessage()));
+            }
+
+            anchorPane.setDisable(false);
+        }).start();
+    }
+
     private void methodOneorDoubleClick(HMessage hMessage) {
-        int furniId = hMessage.getPacket().readInteger();
+        int furnitureId = hMessage.getPacket().readInteger();
         if(checkSpecificFurni.isSelected()){
-            if(!listPoisonFurniture.contains(furniId)){
-                if(!listSpecificFurniture.contains(furniId)){
-                    listSpecificFurniture.add(furniId);
+            if(!listPoisonFurniture.contains(furnitureId)){
+                if(!listSpecificFurniture.contains(furnitureId)){
+                    listSpecificFurniture.add(furnitureId);
                     Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + listSpecificFurniture.size() + ")"));
                     String SaySomething = "The furni has been added successfully";
                     // Packet Structure: {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
@@ -243,11 +321,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
         }
         if(checkPoison.isSelected()){
-            if(!listSpecificFurniture.contains(furniId)){
-                if(!listPoisonFurniture.contains(furniId)){
-                    listPoisonFurniture.add(furniId);
+            if(!listSpecificFurniture.contains(furnitureId)){
+                if(!listPoisonFurniture.contains(furnitureId)){
+                    listPoisonFurniture.add(furnitureId);
                     Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
-                    String SaySomething = "The furni with ID "+ furniId +" has been added successfully";
+                    String SaySomething = "The furni with ID "+ furnitureId +" has been added successfully";
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, userId, SaySomething, 0, 34, 0, -1, userId));
                 }
             }
