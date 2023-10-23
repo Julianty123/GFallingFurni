@@ -8,6 +8,7 @@ import gearth.protocol.HMessage;
 import gearth.protocol.HPacket;
 
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
@@ -32,7 +33,7 @@ import java.util.logging.LogManager;
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.5",
+        Version = "1.2.6",
         Author = "Julianty"
 )
 
@@ -45,7 +46,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
     public CheckBox checkPoison, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
-    public RadioButton radioEqualsCoords, radioCurrent, radioSpecificPoint, radioCoordFurni, radioWalk;
+    public RadioButton radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
 
     public HPoint walkTo;
     public String yourName;
@@ -75,6 +76,10 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public AnchorPane anchorPane;
     public Label labelStatus;
+    public TextArea txtAreaEqualsCoords;
+    public ToggleGroup Em;
+    public RadioButton radioVertical;
+    public RadioButton radioHorizontal;
 
 
     @Override
@@ -132,6 +137,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     }
 
 
+    public int tilesX;
+    public int tilesY;
+
     @Override
     protected void initExtension() {
         onConnect((host, port, APIVersion, versionClient, client) -> getGameData(host)); // Example: host = game-fr.habbo.com
@@ -139,18 +147,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
             RadioButton radioMode = (RadioButton) toggle.getToggleGroup().getSelectedToggle();
             String currentTxtRadio = radioMode.getText();
-            if(currentTxtRadio.contains("Equals")){
-                radioCoordFurni.setDisable(false);   radioWalk.setDisable(false);
-            }
-            else{
-                radioCoordFurni.setDisable(true);    radioWalk.setDisable(true);
-            }
-        });
 
-        radioCoordFurni.selectedProperty().addListener((observableValue, aBoolean, t1) -> {
-            if(radioCoordFurni.isSelected()){
-                listEqualsCoords.clear();   radioCoordFurni.setText("CoordFurni (0)");
-            }
+            radioVertical.setDisable(!currentTxtRadio.contains("Equals"));
+            radioHorizontal.setDisable(!currentTxtRadio.contains("Equals"));
+            radioFreeCoords.setDisable(!currentTxtRadio.contains("Equals"));
+            radioWalkTo.setDisable(!currentTxtRadio.contains("Equals"));
         });
 
         // Runs when the text field changes!
@@ -166,6 +167,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 }
             }
         });
+
+        intercept(HMessage.Direction.TOCLIENT, "HeightMap",  hMsg -> tilesX = hMsg.getPacket().readInteger()); // Number of tiles
+        intercept(HMessage.Direction.TOCLIENT, "FloorHeightMap", this::handleFloorHeightMap);
 
         // Intercepts the client's response and does something ...
         intercept(HMessage.Direction.TOCLIENT, "UserObject", hMessage -> {
@@ -186,22 +190,67 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneorDoubleClick);
 
         intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
+            int x = hMessage.getPacket().readInteger();    int y = hMessage.getPacket().readInteger();
+
             if(checkSpecificPoint.isSelected()){
-                xSpecificPoint = hMessage.getPacket().readInteger();    ySpecificPoint = hMessage.getPacket().readInteger();
+                xSpecificPoint = x;    ySpecificPoint = y;
                 Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")"));
                 hMessage.setBlocked(true);
                 checkSpecificPoint.setSelected(false);
             }
-            else if(radioCoordFurni.isSelected() && !radioCoordFurni.isDisable()){
-                listEqualsCoords.add(new HPoint(hMessage.getPacket().readInteger(), hMessage.getPacket().readInteger()));
-                Platform.runLater(() -> radioCoordFurni.setText("CoordFurni (" + listEqualsCoords.size() + ")"));
+            if(checkPoison.isSelected()) hMessage.setBlocked(true);
+
+            if(radioFreeCoords.isSelected() && !radioFreeCoords.isDisable()){
+                listEqualsCoords.add(new HPoint(x, y));
+
+                txtAreaEqualsCoords.clear();
+                listEqualsCoords.forEach(equalCoord
+                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
                 hMessage.setBlocked(true);
             }
-            else if(radioWalk.isSelected() && !radioWalk.isDisable()){
-                walkTo = new HPoint(hMessage.getPacket().readInteger(), hMessage.getPacket().readInteger());
-                Platform.runLater(() -> radioWalk.setText("Walk to (" + walkTo.getX() + ", " + walkTo.getY() + ")"));
-                radioWalk.setSelected(false);   hMessage.setBlocked(true);
+            else if(radioWalkTo.isSelected() && !radioWalkTo.isDisable()){
+                walkTo = new HPoint(x, y);
+                Platform.runLater(() -> radioWalkTo.setText("Walk to (" + walkTo.getX() + ", " + walkTo.getY() + ")"));
+                radioWalkTo.setSelected(false);   hMessage.setBlocked(true);
             }
+            else if(radioVertical.isSelected() && !radioVertical.isDisable()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
+                for(int i = 0; i < tilesY; i++){
+                    listEqualsCoords.add(new HPoint(x, i));
+                }
+                txtAreaEqualsCoords.clear();
+                listEqualsCoords.forEach(equalCoord
+                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
+                hMessage.setBlocked(true);
+            }
+            else if(radioHorizontal.isSelected() && !radioHorizontal.isDisable()){
+                for(int i = 0; i < tilesX; i++){
+                    listEqualsCoords.add(new HPoint(i, y));
+                }
+                txtAreaEqualsCoords.clear();
+                listEqualsCoords.forEach(equalCoord
+                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
+                hMessage.setBlocked(true);
+            }
+            // Diagonal line
+//            int nMin = Math.min(x, y);
+//                int nMax = Math.max(x, y);
+//
+//                for(int i = nMin; i >= 0; i--) {
+//                    nMax = nMax - 1;
+//                    listEqualsCoords.add(new HPoint(i, nMax));
+//                }
+//
+//                int j = 0;
+//                for(int i = 0; i < tilesX; i++){
+//                    nMin--;
+//                    if(i == j) listEqualsCoords.add(new HPoint(i, j));
+//                    j++;
+//                }
+//
+//                hMessage.setBlocked(true);
         });
 
         // Intercept this packet when any user enters the room
@@ -259,6 +308,13 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 threadToSleep(furnitureId);
             }
         });
+    }
+
+    private void handleFloorHeightMap(HMessage hMessage){
+        boolean idk1 = hMessage.getPacket().readBoolean();  int idk2 = hMessage.getPacket().readInteger();
+        String map = hMessage.getPacket().readString();
+        String[] floorRows = map.split("\\r");
+        tilesY = floorRows.length;
     }
 
     private void handleObjects(HMessage hMessage){
@@ -337,10 +393,12 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     }
 
     private void DoSomething(HMessage hMessage) {
-        if("---ON---".equals(buttonStart.getText())){
-            int furnitureId = hMessage.getPacket().readInteger();   int withOutUse = hMessage.getPacket().readInteger();
-            newXCoordFurni = hMessage.getPacket().readInteger();    newYCoordFurni = hMessage.getPacket().readInteger();
+        int furnitureId = hMessage.getPacket().readInteger();   int uniqueId = hMessage.getPacket().readInteger();
+        if(mapPoisonClassnameToUniqueId.containsValue(uniqueId)) listPoisonFurniture.add(furnitureId);
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
 
+        if("---ON---".equals(buttonStart.getText())){
+            newXCoordFurni = hMessage.getPacket().readInteger();    newYCoordFurni = hMessage.getPacket().readInteger();
             threadToSleep(furnitureId);
         }
     }
@@ -403,6 +461,10 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public void handleDeleteSpecific() {
         listSpecificFurniture.clear();
         Platform.runLater(() -> checkSpecificFurni.setText("Specific Furnis (" + listSpecificFurniture.size() + ")"));
+    }
+
+    public void handleEraseEqualsCoords(ActionEvent actionEvent) {
+        listEqualsCoords.clear();   txtAreaEqualsCoords.clear();
     }
 }
 

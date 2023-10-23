@@ -4,36 +4,46 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane fx:id="anchorPane" prefHeight="366.0" prefWidth="398.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
-    <Pane layoutX="189.0" layoutY="100.0" prefHeight="81.0" prefWidth="199.0" style="-fx-border-color: black;">
-        <RadioButton fx:id="radioWalk" disable="true" layoutX="58.0" layoutY="50.0" mnemonicParsing="false" text="Walk to (-1, -1)">
-           <toggleGroup>
-               <ToggleGroup fx:id="Em" />
-           </toggleGroup>
-        </RadioButton>
-        <RadioButton fx:id="radioCoordFurni" disable="true" layoutX="39.0" layoutY="19.0" mnemonicParsing="false" selected="true" text="CoordFurni (0)" toggleGroup="$Em" />
-        <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" style="-fx-background-color: #363636;" text="Equals Coords Mode">
-          <toggleGroup>
-              <ToggleGroup fx:id="Mode" />
-          </toggleGroup>
-        </RadioButton>
-    </Pane>
-    <Button fx:id="buttonStart" layoutX="233.0" layoutY="287.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="31.0" prefWidth="111.0" text="---OFF---" textFill="RED" />
-    <RadioButton fx:id="radioCurrent" layoutX="15.0" layoutY="89.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Current Mode" toggleGroup="$Mode" />
-    <Label layoutX="132.0" layoutY="45.0" text="Delay:" />
-    <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="178.0" layoutY="40.0" prefHeight="31.0" prefWidth="61.0" text="300" />
-    <CheckBox fx:id="checkAutodisable" layoutX="189.0" layoutY="331.0" mnemonicParsing="false" text="Auto disable when you sit" />
-    <RadioButton fx:id="radioSpecificPoint" layoutX="209.0" layoutY="193.0" mnemonicParsing="false" text="Specific Point Mode" toggleGroup="$Mode" />
-    <CheckBox fx:id="checkSpecificPoint" layoutX="237.0" layoutY="223.0" mnemonicParsing="false" text="(0, 0)" />
-    <CheckBox fx:id="checkPoison" layoutX="14.0" layoutY="120.0" mnemonicParsing="false" text="Poison Furnis (0)" />
-    <Button layoutX="14.0" layoutY="188.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="21.0" prefWidth="138.0" text="Erase Poisons" />
-    <Button fx:id="buttonDeleteSpecific" layoutX="14.0" layoutY="229.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="31.0" prefWidth="178.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
-    <CheckBox fx:id="checkSpecificFurni" layoutX="14.0" layoutY="152.0" mnemonicParsing="false" text="Specific Furnis (0)" />
-   <Label layoutX="223.0" layoutY="257.0" text="Hold Ctrl to turn on" />
+<AnchorPane fx:id="anchorPane" disable="true" prefHeight="450.0" prefWidth="458.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+    <Label layoutX="132.0" layoutY="40.0" text="Delay:" />
+    <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="178.0" layoutY="35.0" prefHeight="31.0" prefWidth="61.0" text="300" />
    <Label fx:id="labelStatus" layoutX="11.0" layoutY="11.0" text="Connected to: " />
+   <Pane layoutX="14.0" layoutY="76.0" prefHeight="294.0" prefWidth="434.0" style="-fx-border-color: black;">
+      <children>
+          <Pane layoutX="217.0" layoutY="18.0" prefHeight="265.0" prefWidth="199.0" style="-fx-border-color: black;">
+              <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" style="-fx-background-color: #363636;" text="Equals Coords">
+                <toggleGroup>
+                    <ToggleGroup fx:id="Mode" />
+                </toggleGroup>
+              </RadioButton>
+            <TextArea fx:id="txtAreaEqualsCoords" layoutX="12.0" layoutY="122.0" prefHeight="133.0" prefWidth="107.0" />
+            <Button layoutX="130.0" layoutY="186.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
+            <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="24.0" mnemonicParsing="false" text="Horizontal Line">
+               <toggleGroup>
+                  <ToggleGroup fx:id="Em" />
+               </toggleGroup>
+            </RadioButton>
+            <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="45.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
+              <RadioButton fx:id="radioFreeCoords" disable="true" layoutX="14.0" layoutY="66.0" mnemonicParsing="false" selected="true" text="FreeCoords" toggleGroup="$Em" />
+              <RadioButton fx:id="radioWalkTo" disable="true" layoutX="41.0" layoutY="87.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
+          </Pane>
+          <RadioButton fx:id="radioCurrent" layoutX="15.0" layoutY="16.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Normal" toggleGroup="$Mode" />
+          <RadioButton fx:id="radioSpecificPoint" layoutX="15.0" layoutY="204.0" mnemonicParsing="false" text="Specific Point" toggleGroup="$Mode" />
+          <CheckBox fx:id="checkSpecificPoint" layoutX="43.0" layoutY="234.0" mnemonicParsing="false" text="(0, 0)" />
+          <CheckBox fx:id="checkPoison" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" text="Poison Furnis (0)" />
+          <Button layoutX="14.0" layoutY="115.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="21.0" prefWidth="138.0" text="Erase Poisons" />
+          <Button fx:id="buttonDeleteSpecific" layoutX="14.0" layoutY="156.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="31.0" prefWidth="178.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
+          <CheckBox fx:id="checkSpecificFurni" layoutX="14.0" layoutY="79.0" mnemonicParsing="false" text="Specific Furnis (0)" />
+         <Label layoutX="14.0" layoutY="-10.0" style="-fx-background-color: #363636;" text="Mode" />
+      </children>
+   </Pane>
+    <Button fx:id="buttonStart" layoutX="24.0" layoutY="407.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="31.0" prefWidth="111.0" text="---OFF---" textFill="RED" />
+   <Label layoutX="14.0" layoutY="377.0" text="Hold Ctrl to turn on" />
+    <CheckBox fx:id="checkAutodisable" layoutX="221.0" layoutY="397.0" mnemonicParsing="false" text="Auto disable when you sit" />
 </AnchorPane>
