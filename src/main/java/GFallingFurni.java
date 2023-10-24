@@ -38,22 +38,27 @@ import java.util.logging.LogManager;
 )
 
 public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
-    public HashSet<Integer> listPoisonFurniture = new HashSet<>(); // Dont allow duplicates elements
-    public ArrayList<Integer> listSpecificFurniture = new ArrayList<>(); // HashSet
-    public ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
 
-    public ToggleGroup Mode;
+    public AnchorPane anchorPane;
+    public Label labelStatus;
+    public TextArea txtAreaEqualsCoords;
+    public ToggleGroup Mode, Em;
+    public CheckBox checkSquare;
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
-    public CheckBox checkPoison, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
-    public RadioButton radioSquare, radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
+    public CheckBox checkPoison, checkAutoDisable, checkSpecificPoint, checkSpecificFurni;
+    public RadioButton radioVertical, radioHorizontal, radioSquare,
+            radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
 
     public HPoint walkTo;
     public String yourName;
     public int yourIndex = -1;
-    public int userId, newXCoordFurni, newYCoordFurni, xSpecificPoint, ySpecificPoint;
+    public int userId, newXFurniture, newYFurniture, xSpecificPoint, ySpecificPoint;
 
-    private ArrayList<String> squareSelected = new ArrayList<>();
+    public ArrayList<String> squareSelected = new ArrayList<>();
+    public HashSet<Integer> listPoisonFurniture = new HashSet<>(); // HashSet dont allow duplicates elements
+    public HashSet<Integer> listSpecificFurniture = new HashSet<>();
+    public ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
     public HPoint startSquare = new HPoint(-1, -1);
     public HPoint endSquare = new HPoint(-1, -1);
 
@@ -77,15 +82,6 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         mapPoisonClassnameToUniqueId.put("hween13_tile2", -1);  // Teleport pica negra
         mapPoisonClassnameToUniqueId.put("bb_rnd_tele", -1); // Teleport banzai
     }
-
-    public AnchorPane anchorPane;
-    public Label labelStatus;
-    public TextArea txtAreaEqualsCoords;
-    public ToggleGroup Em;
-    public RadioButton radioVertical;
-    public RadioButton radioHorizontal;
-    public CheckBox checkSquare;
-
 
     @Override
     public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
@@ -151,9 +147,10 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
         Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
             RadioButton radioMode = (RadioButton) Mode.getSelectedToggle();
-            if(radioMode == null) { // fix this!
-                System.out.println("radioMode is null");
-                return;
+
+            // i neeed to found way for avoid do this
+            if(radioMode == null) {
+                System.out.println("radioMode is null");    return;
             }
             String currentTxtRadio = radioMode.getText();
 
@@ -168,181 +165,151 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             try {
                 Integer.parseInt(fieldDelay.getText());
             } catch (NumberFormatException e) {
-                if("".equals(fieldDelay.getText())){
-                    fieldDelay.setText("1");
-                }
-                else {
-                    fieldDelay.setText(oldValue);
-                }
+                if(fieldDelay.getText().isEmpty()) fieldDelay.setText("1");
+                else fieldDelay.setText(oldValue);
             }
         });
 
         intercept(HMessage.Direction.TOCLIENT, "HeightMap",  hMsg -> tilesX = hMsg.getPacket().readInteger()); // Number of tiles
         intercept(HMessage.Direction.TOCLIENT, "FloorHeightMap", this::handleFloorHeightMap);
+        intercept(HMessage.Direction.TOCLIENT, "UserObject", this::interceptUserObject); // When InfoRetrieve is sent to the server
+        intercept(HMessage.Direction.TOCLIENT, "Expression", this::interceptExpression); // Response of packet AvatarExpression
 
-        // Intercepts the client's response and does something ...
-        intercept(HMessage.Direction.TOCLIENT, "UserObject", hMessage -> {
-            // Be careful, the data must be obtained in the order of the packet
-            userId = hMessage.getPacket().readInteger();
-            yourName = hMessage.getPacket().readString();
-        });
+        intercept(HMessage.Direction.TOSERVER, "ClickFurni", this::methodOneOrDoubleClick);
+        intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneOrDoubleClick);
 
-        // Response of packet AvatarExpression (gets userIndex)
-        intercept(HMessage.Direction.TOCLIENT, "Expression", hMessage -> {
-            // First integer is index in room, second is animation id, i think
-            if(primaryStage.isShowing() && yourIndex == -1){ // this could avoid any bug
-                yourIndex = hMessage.getPacket().readInteger();
-            }
-        });
-
-        intercept(HMessage.Direction.TOSERVER, "ClickFurni", this::methodOneorDoubleClick);
-        intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneorDoubleClick);
-
-        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", hMessage -> {
-            int x = hMessage.getPacket().readInteger();    int y = hMessage.getPacket().readInteger();
-
-            if(checkSpecificPoint.isSelected()){
-                xSpecificPoint = x;    ySpecificPoint = y;
-                Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")"));
-                hMessage.setBlocked(true);
-                checkSpecificPoint.setSelected(false);
-            }
-            if(checkPoison.isSelected()) hMessage.setBlocked(true);
-
-            if(checkSquare.isSelected()){
-                if(!startSquare.toString().equals("(-1,-1,0.0)") && !endSquare.toString().equals("(-1,-1,0.0)"))
-                    startSquare = new HPoint(-1, -1);	endSquare = new HPoint(-1, -1);
-
-                if(startSquare.getX() == -1 && startSquare.getY() == -1){
-                    startSquare = new HPoint(x, y);
-                    Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
-                            startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
-                }
-                else if(endSquare.getX() == -1 && endSquare.getY() == -1){
-                    endSquare = new HPoint(x, y);
-                    Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
-                            startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
-
-                    squareSelected.clear();
-                    for(int yCoord = startSquare.getY(); yCoord <= endSquare.getY(); yCoord++){
-                        for(int xCoord = startSquare.getX(); xCoord <= endSquare.getX(); xCoord++){
-                            // if(walkableTiles.contains(new HPoint(xCoord, yCoord)))
-                            squareSelected.add(new HPoint(xCoord, yCoord).toString());
-                        }
-                    }
-                    checkSquare.setSelected(false);
-                }
-
-                hMessage.setBlocked(true);
-            }
-            else if(radioFreeCoords.isSelected() && !radioFreeCoords.isDisable()){
-                listEqualsCoords.add(new HPoint(x, y));
-
-                txtAreaEqualsCoords.clear();
-                listEqualsCoords.forEach(equalCoord
-                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
-
-                hMessage.setBlocked(true);
-            }
-            else if(radioWalkTo.isSelected() && !radioWalkTo.isDisable()){
-                walkTo = new HPoint(x, y);
-                Platform.runLater(() -> radioWalkTo.setText("Walk to (" + walkTo.getX() + ", " + walkTo.getY() + ")"));
-                radioWalkTo.setSelected(false);   hMessage.setBlocked(true);
-            }
-            else if(radioVertical.isSelected() && !radioVertical.isDisable()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
-                for(int i = 0; i < tilesY; i++){
-                    listEqualsCoords.add(new HPoint(x, i));
-                }
-                txtAreaEqualsCoords.clear();
-                listEqualsCoords.forEach(equalCoord
-                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
-
-                hMessage.setBlocked(true);
-            }
-            else if(radioHorizontal.isSelected() && !radioHorizontal.isDisable()){
-                for(int i = 0; i < tilesX; i++){
-                    listEqualsCoords.add(new HPoint(i, y));
-                }
-                txtAreaEqualsCoords.clear();
-                listEqualsCoords.forEach(equalCoord
-                        -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
-
-                hMessage.setBlocked(true);
-            }
-            // Diagonal line
-//            int nMin = Math.min(x, y);
-//                int nMax = Math.max(x, y);
-//
-//                for(int i = nMin; i >= 0; i--) {
-//                    nMax = nMax - 1;
-//                    listEqualsCoords.add(new HPoint(i, nMax));
-//                }
-//
-//                int j = 0;
-//                for(int i = 0; i < tilesX; i++){
-//                    nMin--;
-//                    if(i == j) listEqualsCoords.add(new HPoint(i, j));
-//                    j++;
-//                }
-//
-//                hMessage.setBlocked(true);
-        });
-
-        // Intercept this packet when any user enters the room
-        intercept(HMessage.Direction.TOCLIENT, "Users", hMessage -> {
-            try {
-                HPacket hPacket = hMessage.getPacket();
-                HEntity[] roomUsersList = HEntity.parse(hPacket);
-                for (HEntity hEntity: roomUsersList){
-                    if(hEntity.getName().equals(yourName)){    // In another room, the index changes
-                        yourIndex = hEntity.getIndex();
-                    }
-                }
-            } catch (Exception ignored) { }
-        });
-
-        // Intercepts when users in the room move
-        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", hMessage -> {
-            HPacket hPacket = hMessage.getPacket();
-            for (HEntityUpdate hEntityUpdate: HEntityUpdate.parse(hPacket)){
-                try {
-                    int currentIndex = hEntityUpdate.getIndex();
-                    if(yourIndex == currentIndex){
-                        if(checkAutodisable.isSelected()){
-                            HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
-
-                            if((newXCoordFurni == currentHPoint.getX() && newYCoordFurni == currentHPoint.getY()) ||
-                                    (walkTo.getX() == currentHPoint.getX() && walkTo.getY() == currentHPoint.getY()) ||
-                                    (xSpecificPoint == currentHPoint.getX() && ySpecificPoint == currentHPoint.getY())){
-                                Platform.runLater(this::turnOffButton);
-                                break;
-                            }
-                        }
-                    }
-                }
-                catch (Exception ignored) { }
-            }
-        });
-
+        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", this::interceptMoveAvatar);
+        intercept(HMessage.Direction.TOCLIENT, "Users", this::interceptUsers); // Intercept this packet when any user enters the room
+        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", this::interceptUserUpdate); // Intercepts when users walking in the room
         intercept(HMessage.Direction.TOCLIENT, "Objects", this::handleObjects);
 
-        // Runs this instruction when the furni is added to the room
-        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::DoSomething);
+        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::DoSomething); // Intercepts when the furniture is added
+        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::DoSomething); // Intercepts when the furniture is moved
 
-        // Runs this instruction when the furni is moved
-        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::DoSomething);
+        intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::interceptSlideObjectBundle); // Intercepts when the furniture is moved with wired
+    }
 
-        // Intercepts when a furni is moved from one place to another with wired!
-        intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", hMessage -> {
-            if("---ON---".equals(buttonStart.getText())){
-                int oldX = hMessage.getPacket().readInteger();  int oldY = hMessage.getPacket().readInteger();
-                newXCoordFurni = hMessage.getPacket().readInteger();    newYCoordFurni = hMessage.getPacket().readInteger();
-                int NotUse = hMessage.getPacket().readInteger();
-                int furnitureId = hMessage.getPacket().readInteger();
+    private void interceptSlideObjectBundle(HMessage hMessage) {
+        if("---ON---".equals(buttonStart.getText())){
+            int oldX = hMessage.getPacket().readInteger();  int oldY = hMessage.getPacket().readInteger();
+            newXFurniture = hMessage.getPacket().readInteger();    newYFurniture = hMessage.getPacket().readInteger();
+            int NotUse = hMessage.getPacket().readInteger();
+            int furnitureId = hMessage.getPacket().readInteger();
 
-                threadToSleep(furnitureId);
+            if (listSpecificFurniture.contains(furnitureId)) sitOnTheChair();
+            else if (!listPoisonFurniture.contains(furnitureId)) sitOnTheChair();
+        }
+    }
+
+    private void interceptMoveAvatar(HMessage hMessage) {
+        int x = hMessage.getPacket().readInteger();    int y = hMessage.getPacket().readInteger();
+
+        if(checkSpecificPoint.isSelected()){
+            xSpecificPoint = x;    ySpecificPoint = y;
+            Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")"));
+            hMessage.setBlocked(true);
+            checkSpecificPoint.setSelected(false);
+        }
+        if(checkPoison.isSelected()) hMessage.setBlocked(true);
+
+        if(checkSquare.isSelected()){
+            if(!startSquare.toString().equals("(-1,-1,0.0)") && !endSquare.toString().equals("(-1,-1,0.0)"))
+                startSquare = new HPoint(-1, -1);	endSquare = new HPoint(-1, -1);
+
+            if(startSquare.getX() == -1 && startSquare.getY() == -1){
+                startSquare = new HPoint(x, y);
             }
-        });
+            else if(endSquare.getX() == -1 && endSquare.getY() == -1){
+                endSquare = new HPoint(x, y);
+
+                squareSelected.clear();
+                for(int yCoord = startSquare.getY(); yCoord <= endSquare.getY(); yCoord++){
+                    for(int xCoord = startSquare.getX(); xCoord <= endSquare.getX(); xCoord++){
+                        // if(walkableTiles.contains(new HPoint(xCoord, yCoord)))
+                        squareSelected.add(new HPoint(xCoord, yCoord).toString());
+                    }
+                }
+                checkSquare.setSelected(false);
+            }
+
+            Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
+                    startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
+            hMessage.setBlocked(true);
+        }
+        else if(radioFreeCoords.isSelected() && !radioFreeCoords.isDisable()){
+            listEqualsCoords.add(new HPoint(x, y));
+
+            txtAreaEqualsCoords.clear();
+            listEqualsCoords.forEach(equalCoord
+                    -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
+            hMessage.setBlocked(true);
+        }
+        else if(radioWalkTo.isSelected() && !radioWalkTo.isDisable()){
+            walkTo = new HPoint(x, y);
+            Platform.runLater(() -> radioWalkTo.setText("Walk to (" + walkTo.getX() + ", " + walkTo.getY() + ")"));
+            radioWalkTo.setSelected(false);   hMessage.setBlocked(true);
+        }
+        else if(radioVertical.isSelected() && !radioVertical.isDisable()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
+            for(int i = 0; i < tilesY; i++){
+                listEqualsCoords.add(new HPoint(x, i));
+            }
+            txtAreaEqualsCoords.clear();
+            listEqualsCoords.forEach(equalCoord
+                    -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
+            hMessage.setBlocked(true);
+        }
+        else if(radioHorizontal.isSelected() && !radioHorizontal.isDisable()){
+            for(int i = 0; i < tilesX; i++){
+                listEqualsCoords.add(new HPoint(i, y));
+            }
+            txtAreaEqualsCoords.clear();
+            listEqualsCoords.forEach(equalCoord
+                    -> txtAreaEqualsCoords.appendText(equalCoord + "\n"));
+
+            hMessage.setBlocked(true);
+        }
+    }
+
+    private void interceptUsers(HMessage hMessage) {
+        try {
+            HPacket hPacket = hMessage.getPacket();
+            HEntity[] roomUsersList = HEntity.parse(hPacket);
+            for (HEntity hEntity: roomUsersList){
+                if(hEntity.getName().equals(yourName)) yourIndex = hEntity.getIndex(); // In another room, the index changes
+            }
+        } catch (Exception ignored) { }
+    }
+
+    private void interceptUserUpdate(HMessage hMessage) {
+        HPacket hPacket = hMessage.getPacket();
+        for (HEntityUpdate hEntityUpdate: HEntityUpdate.parse(hPacket)){
+            try {
+                int currentIndex = hEntityUpdate.getIndex();
+                // if(yourIndex == currentIndex && checkAutoDisable.isSelected())
+                if(yourIndex != currentIndex || !checkAutoDisable.isSelected()) continue;
+                HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
+
+                if((newXFurniture == currentHPoint.getX() && newYFurniture == currentHPoint.getY()) ||
+                        (walkTo.getX() == currentHPoint.getX() && walkTo.getY() == currentHPoint.getY()) ||
+                        (xSpecificPoint == currentHPoint.getX() && ySpecificPoint == currentHPoint.getY())){
+                    Platform.runLater(this::turnOffButton);
+                    break;
+                }
+            }
+            catch (Exception ignored) { }
+        }
+    }
+
+    private void interceptExpression(HMessage hMessage) {
+        // first integer: your index in room, second: animation id
+        if(primaryStage.isShowing() && yourIndex == -1)  // To avoid any bug
+            yourIndex = hMessage.getPacket().readInteger();
+    }
+
+    private void interceptUserObject(HMessage hMessage) {
+        userId = hMessage.getPacket().readInteger();    yourName = hMessage.getPacket().readString();
     }
 
     private void handleFloorHeightMap(HMessage hMessage){
@@ -394,7 +361,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }).start();
     }
 
-    private void methodOneorDoubleClick(HMessage hMessage) {
+    private void methodOneOrDoubleClick(HMessage hMessage) {
         int furnitureId = hMessage.getPacket().readInteger();
         if(checkSpecificFurni.isSelected()){
             if(!listPoisonFurniture.contains(furnitureId)){
@@ -433,60 +400,51 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
 
         if("---ON---".equals(buttonStart.getText())){
-            newXCoordFurni = hMessage.getPacket().readInteger();    newYCoordFurni = hMessage.getPacket().readInteger();
-            threadToSleep(furnitureId);
+            newXFurniture = hMessage.getPacket().readInteger();    newYFurniture = hMessage.getPacket().readInteger();
+
+            if (listSpecificFurniture.contains(furnitureId)) sitOnTheChair();
+            else if (!listPoisonFurniture.contains(furnitureId)) sitOnTheChair();
         }
     }
 
-    private void threadToSleep(int furnitureId){
-        // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep
+    private void sitOnTheChair(){
+        // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep()
         Thread t1 = new Thread(() -> {
             try {
                 Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
             }catch (InterruptedException ignored){}
 
-            if(!listSpecificFurniture.isEmpty()){
-                if (listSpecificFurniture.contains(furnitureId)) SitOnTheChair();
+            RadioButton radioCurrent = (RadioButton) Mode.getSelectedToggle();
+            String txtRadio = radioCurrent.getText();
+
+            if(txtRadio.contains("Normal")){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXFurniture, newYFurniture));
             }
-            else { // When is equals to 0
-                if (!listPoisonFurniture.contains(furnitureId)) SitOnTheChair();
+            else if(txtRadio.contains("Equals")){
+                for(HPoint equalsCoords: listEqualsCoords){
+                    if(newXFurniture == equalsCoords.getX() && newYFurniture == equalsCoords.getY()){
+                        sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, walkTo.getX(), walkTo.getY()));
+                        break;
+                    }
+                }
+            }
+            else if(txtRadio.contains("Specific")){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
+            }
+            else if(txtRadio.contains("Square")){
+                if(squareSelected.contains(new HPoint(newXFurniture, newYFurniture).toString())){
+                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXFurniture, newYFurniture));
+                }
             }
         });
         t1.start(); // Thread started
-    }
-
-    private void SitOnTheChair(){
-        RadioButton radioCurrent = (RadioButton) Mode.getSelectedToggle();
-        String txtRadio = radioCurrent.getText();
-
-        if(txtRadio.contains("Normal")){
-            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
-        }
-        else if(txtRadio.contains("Equals")){
-            for(HPoint equalsCoords: listEqualsCoords){
-                if(newXCoordFurni == equalsCoords.getX() && newYCoordFurni == equalsCoords.getY()){
-                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, walkTo.getX(), walkTo.getY()));
-                    break;
-                }
-            }
-        }
-        else if(txtRadio.contains("Specific")){
-            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
-        }
-        else if(txtRadio.contains("Square")){
-            if(squareSelected.contains(new HPoint(newXCoordFurni, newYCoordFurni).toString())){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
-            }
-        }
     }
 
     public void handleButtonStart(){
         if("---OFF---".equals(buttonStart.getText())){
             buttonStart.setText("---ON---");    buttonStart.setTextFill(Color.GREEN);
         }
-        else {
-            turnOffButton();
-        }
+        else turnOffButton();
     }
 
     public void turnOffButton(){
