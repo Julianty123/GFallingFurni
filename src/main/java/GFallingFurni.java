@@ -33,7 +33,7 @@ import java.util.logging.LogManager;
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.6",
+        Version = "1.2.7",
         Author = "Julianty"
 )
 
@@ -46,12 +46,16 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
     public CheckBox checkPoison, checkAutodisable, checkSpecificPoint, checkSpecificFurni;
-    public RadioButton radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
+    public RadioButton radioSquare, radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
 
     public HPoint walkTo;
     public String yourName;
     public int yourIndex = -1;
     public int userId, newXCoordFurni, newYCoordFurni, xSpecificPoint, ySpecificPoint;
+
+    private ArrayList<String> squareSelected = new ArrayList<>();
+    public HPoint startSquare = new HPoint(-1, -1);
+    public HPoint endSquare = new HPoint(-1, -1);
 
     private static final HashMap<String, String> hostToDomain = new HashMap<>();
     static {
@@ -80,6 +84,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public ToggleGroup Em;
     public RadioButton radioVertical;
     public RadioButton radioHorizontal;
+    public CheckBox checkSquare;
 
 
     @Override
@@ -145,7 +150,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         onConnect((host, port, APIVersion, versionClient, client) -> getGameData(host)); // Example: host = game-fr.habbo.com
 
         Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
-            RadioButton radioMode = (RadioButton) toggle.getToggleGroup().getSelectedToggle();
+            RadioButton radioMode = (RadioButton) Mode.getSelectedToggle();
+            if(radioMode == null) { // fix this!
+                System.out.println("radioMode is null");
+                return;
+            }
             String currentTxtRadio = radioMode.getText();
 
             radioVertical.setDisable(!currentTxtRadio.contains("Equals"));
@@ -200,7 +209,33 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
             if(checkPoison.isSelected()) hMessage.setBlocked(true);
 
-            if(radioFreeCoords.isSelected() && !radioFreeCoords.isDisable()){
+            if(checkSquare.isSelected()){
+                if(!startSquare.toString().equals("(-1,-1,0.0)") && !endSquare.toString().equals("(-1,-1,0.0)"))
+                    startSquare = new HPoint(-1, -1);	endSquare = new HPoint(-1, -1);
+
+                if(startSquare.getX() == -1 && startSquare.getY() == -1){
+                    startSquare = new HPoint(x, y);
+                    Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
+                            startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
+                }
+                else if(endSquare.getX() == -1 && endSquare.getY() == -1){
+                    endSquare = new HPoint(x, y);
+                    Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
+                            startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
+
+                    squareSelected.clear();
+                    for(int yCoord = startSquare.getY(); yCoord <= endSquare.getY(); yCoord++){
+                        for(int xCoord = startSquare.getX(); xCoord <= endSquare.getX(); xCoord++){
+                            // if(walkableTiles.contains(new HPoint(xCoord, yCoord)))
+                            squareSelected.add(new HPoint(xCoord, yCoord).toString());
+                        }
+                    }
+                    checkSquare.setSelected(false);
+                }
+
+                hMessage.setBlocked(true);
+            }
+            else if(radioFreeCoords.isSelected() && !radioFreeCoords.isDisable()){
                 listEqualsCoords.add(new HPoint(x, y));
 
                 txtAreaEqualsCoords.clear();
@@ -410,11 +445,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
             }catch (InterruptedException ignored){}
 
-            if(listSpecificFurniture.size() > 0){
-                if (listSpecificFurniture.contains(furnitureId)){ SitOnTheChair(); }
+            if(!listSpecificFurniture.isEmpty()){
+                if (listSpecificFurniture.contains(furnitureId)) SitOnTheChair();
             }
             else { // When is equals to 0
-                if (!listPoisonFurniture.contains(furnitureId)){ SitOnTheChair(); }
+                if (!listPoisonFurniture.contains(furnitureId)) SitOnTheChair();
             }
         });
         t1.start(); // Thread started
@@ -424,7 +459,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         RadioButton radioCurrent = (RadioButton) Mode.getSelectedToggle();
         String txtRadio = radioCurrent.getText();
 
-        if(txtRadio.contains("Current")){
+        if(txtRadio.contains("Normal")){
             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
         }
         else if(txtRadio.contains("Equals")){
@@ -437,6 +472,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
         else if(txtRadio.contains("Specific")){
             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
+        }
+        else if(txtRadio.contains("Square")){
+            if(squareSelected.contains(new HPoint(newXCoordFurni, newYCoordFurni).toString())){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, newXCoordFurni, newYCoordFurni));
+            }
         }
     }
 
