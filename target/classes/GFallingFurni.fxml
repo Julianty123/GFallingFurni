@@ -3,35 +3,37 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.RadioButton?>
-<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.control.ToggleGroup?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane fx:id="anchorPane" prefHeight="478.0" prefWidth="458.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+<AnchorPane fx:id="anchorPane" disable="true" prefHeight="478.0" prefWidth="457.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
     <Label layoutX="132.0" layoutY="40.0" text="Delay:" />
     <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="178.0" layoutY="35.0" prefHeight="31.0" prefWidth="61.0" text="300" />
    <Label fx:id="labelStatus" layoutX="11.0" layoutY="11.0" text="Connected to: " />
    <Pane layoutX="14.0" layoutY="76.0" prefHeight="326.0" prefWidth="434.0" style="-fx-border-color: black;">
       <children>
-          <Pane layoutX="223.0" layoutY="18.0" prefHeight="265.0" prefWidth="199.0" style="-fx-border-color: black;">
+          <Pane layoutX="223.0" layoutY="18.0" prefHeight="298.0" prefWidth="199.0" style="-fx-border-color: black;">
               <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" style="-fx-background-color: #363636;" text="Equals Coords">
                 <toggleGroup>
                     <ToggleGroup fx:id="Mode" />
                 </toggleGroup>
               </RadioButton>
-            <TextArea fx:id="txtAreaEqualsCoords" layoutX="12.0" layoutY="122.0" prefHeight="133.0" prefWidth="107.0" />
-            <Button layoutX="130.0" layoutY="186.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
-            <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="24.0" mnemonicParsing="false" text="Horizontal Line">
+            <Button layoutX="124.0" layoutY="134.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
+            <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="22.0" mnemonicParsing="false" text="Horizontal Line">
                <toggleGroup>
                   <ToggleGroup fx:id="Em" />
                </toggleGroup>
             </RadioButton>
-            <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="45.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
-              <RadioButton fx:id="radioFreeCoords" disable="true" layoutX="14.0" layoutY="66.0" mnemonicParsing="false" selected="true" text="FreeCoords" toggleGroup="$Em" />
-              <RadioButton fx:id="radioWalkTo" disable="true" layoutX="41.0" layoutY="87.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
+            <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="43.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
+            <RadioButton fx:id="radioBoth" disable="true" layoutX="14.0" layoutY="65.0" mnemonicParsing="false" text="Both (V+L)" toggleGroup="$Em" />
+              <RadioButton fx:id="radioFreeCoords" disable="true" layoutX="18.0" layoutY="236.0" mnemonicParsing="false" selected="true" text="FreeCoords" toggleGroup="$Em" />
+              <RadioButton fx:id="radioWalkTo" disable="true" layoutX="45.0" layoutY="257.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
+            <CheckBox fx:id="checkListEqual" layoutX="123.0" layoutY="99.0" mnemonicParsing="false" />
+            <ListView fx:id="listViewEquals" layoutX="17.0" layoutY="99.0" prefHeight="124.0" prefWidth="98.0" />
           </Pane>
           <RadioButton fx:id="radioCurrent" layoutX="15.0" layoutY="16.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Normal" toggleGroup="$Mode" />
           <RadioButton fx:id="radioSpecificPoint" layoutX="14.0" layoutY="201.0" mnemonicParsing="false" text="Specific Point" toggleGroup="$Mode" />
