@@ -48,7 +48,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public TextField fieldDelay;
     public Button buttonStart, buttonDeleteSpecific;
     public CheckBox checkPoison, checkAutoDisable, checkSpecificPoint, checkSpecificFurni;
-    public RadioButton radioVertical, radioHorizontal, radioBoth, radioSquare,
+    public RadioButton radioVertical, radioHorizontal, radioTriangle, radioSquare,
             radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFreeCoords, radioWalkTo;
 
     public HPoint walkTo;
@@ -145,7 +145,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     protected void initExtension() {
         onConnect((host, port, APIVersion, versionClient, client) -> getGameData(host)); // Example: host = game-fr.habbo.com
 
-        Mode.selectedToggleProperty().addListener((observableValue, toggle, t1) -> {
+        Mode.selectedToggleProperty().addListener((observableValue, oldToggle, newToggle) -> {
             RadioButton radioMode = (RadioButton) Mode.getSelectedToggle();
 
             // i need to found way for avoid do this
@@ -156,9 +156,17 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
             radioVertical.setDisable(!currentTxtRadio.contains("Equals"));
             radioHorizontal.setDisable(!currentTxtRadio.contains("Equals"));
-            radioBoth.setDisable(!currentTxtRadio.contains("Equals"));
+            radioTriangle.setDisable(!currentTxtRadio.contains("Equals"));
             radioFreeCoords.setDisable(!currentTxtRadio.contains("Equals"));
             radioWalkTo.setDisable(!currentTxtRadio.contains("Equals"));
+        });
+
+        radioWalkTo.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue) checkListEqual.setSelected(false);
+        });
+
+        radioFreeCoords.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue) checkListEqual.setSelected(true);
         });
 
         // Runs when the text field changes!
@@ -267,17 +275,10 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
             hMessage.setBlocked(true); checkListEqual.setSelected(false);
         }
-        else if(radioBoth.isSelected() && checkListEqual.isSelected()){
-            ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
-            for(int i = 0; i < tilesY; i++) {
-                if(!listViewEquals.getItems().contains(new HPoint(x, i))) listEqualsCoords.add(new HPoint(x, i));
+        else if(radioTriangle.isSelected() && checkListEqual.isSelected()){
+            if(!listViewEquals.getItems().contains(new HPoint(x, y))){
+                Platform.runLater(()-> listViewEquals.getItems().add(new HPoint(x, y)));
             }
-            for(int i = 0; i < tilesX; i++) {
-                // To avoid duplicate in intersection
-                if(!listEqualsCoords.contains(new HPoint(i, y)) && !listViewEquals.getItems().contains(new HPoint(i, y)))
-                    listEqualsCoords.add(new HPoint(i, y));
-            }
-            Platform.runLater(()-> listViewEquals.getItems().addAll(listEqualsCoords));
 
             hMessage.setBlocked(true); checkListEqual.setSelected(false);
         }
@@ -432,15 +433,15 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
             }
             else if(txtRadio.contains("Equals")){
-                if(radioFreeCoords.isSelected()){
-                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, walkTo.getX(), walkTo.getY()));
-                }
-                else{ // Horizontal, vertical or both
-                    for(HPoint equalsCoords: listViewEquals.getItems()){
-                        if(xFurniture == equalsCoords.getX() && yFurniture == equalsCoords.getY()){
-                            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
-                            break;
+                for(HPoint equalsCoords: listViewEquals.getItems()){
+                    if(xFurniture == equalsCoords.getX() && yFurniture == equalsCoords.getY()){
+                        if(radioFreeCoords.isSelected()){
+                            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, walkTo.getX(), walkTo.getY()));
                         }
+                        else{ // Horizontal, vertical or both
+                            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                        }
+                        break;
                     }
                 }
             }
