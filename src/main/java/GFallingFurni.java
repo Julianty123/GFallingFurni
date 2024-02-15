@@ -365,11 +365,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                     if(mapPoisonClassnameToUniqueId.containsKey(classname)) mapPoisonClassnameToUniqueId.put(classname, id);
                 });
 
-                Platform.runLater(()-> labelStatus.setText(labelStatus.getText() + url));
+                Platform.runLater(()-> labelStatus.setText("Connected to: " + url));
                 sendToServer(new HPacket("{out:GetHeightMap}")); // Get Objects, Items, etc. Without restart the room
 
             }catch (Exception e){
-                Platform.runLater(()-> labelStatus.setText(labelStatus.getText() + e.getMessage()));
+                Platform.runLater(()-> labelStatus.setText("Connected to: " + e.getMessage()));
             }
 
             anchorPane.setDisable(false);
