@@ -33,7 +33,7 @@ import java.util.logging.LogManager;
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Classic extension, enjoy it!",
-        Version = "1.2.9",
+        Version = "1.3.0",
         Author = "Julianty"
 )
 
@@ -83,19 +83,23 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         mapPoisonClassnameToUniqueId.put("bb_rnd_tele", -1); // Teleport banzai
     }
 
+    public RadioButton radioDiagonal;
+
     @Override
     public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
 
     @Override
     public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
-        if(NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()).equals("Ctrl")){
+        int key = nativeKeyEvent.getKeyCode();  // System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(key));
+        if(NativeKeyEvent.getKeyText(key).equals("Ctrl")){ // Mayús Ctrl
             Platform.runLater(() -> { buttonStart.setText("---ON---"); buttonStart.setTextFill(Color.GREEN); });
         }
     }
 
     @Override
     public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
-        if(NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode()).equals("Ctrl")){
+        int key = nativeKeyEvent.getKeyCode();  // System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(key));
+        if(NativeKeyEvent.getKeyText(key).equals("Ctrl")){ // Mayús Ctrl
             Platform.runLater(this::turnOffButton);
         }
     }
@@ -154,6 +158,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
             String currentTxtRadio = radioMode.getText();
 
+            radioDiagonal.setDisable(!currentTxtRadio.contains("Equals"));
             radioVertical.setDisable(!currentTxtRadio.contains("Equals"));
             radioHorizontal.setDisable(!currentTxtRadio.contains("Equals"));
             radioTriangle.setDisable(!currentTxtRadio.contains("Equals"));
@@ -211,7 +216,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     }
 
     private void interceptMoveAvatar(HMessage hMessage) {
-        int x = hMessage.getPacket().readInteger();    int y = hMessage.getPacket().readInteger();
+        int x = hMessage.getPacket().readInteger();
+        int y = hMessage.getPacket().readInteger();
 
         if(checkSpecificPoint.isSelected()){
             xSpecificPoint = x;    ySpecificPoint = y;
@@ -250,8 +256,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
         else if(radioFree.isSelected() && checkListEqual.isSelected()){
             if(checkListEqual.isSelected()){
-                if(!listViewEquals.getItems().contains(new HPoint(x, y)))
+                if(!listViewEquals.getItems().contains(new HPoint(x, y))) {
                     Platform.runLater(()-> listViewEquals.getItems().add(new HPoint(x, y)));
+                }
                 hMessage.setBlocked(true);
             }
         }
@@ -259,6 +266,52 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             hPointFreeWalkTo = new HPoint(x, y);
             Platform.runLater(() -> radioFree_WalkTo.setText("Walk to (" + hPointFreeWalkTo.getX() + ", " + hPointFreeWalkTo.getY() + ")"));
             radioFree_WalkTo.setSelected(false);   hMessage.setBlocked(true);
+        }
+        else if(radioDiagonal.isSelected() && checkListEqual.isSelected()){
+            ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
+
+            // Diagonal izquierda abajo
+            int xReference = x;
+            int yReference = y;
+            for(int i = xReference; i >= 0; i--) {
+                if(!listViewEquals.getItems().contains(new HPoint(i, yReference)))
+                    listEqualsCoords.add(new HPoint(i, yReference));
+
+                yReference = yReference + 1;
+            }
+
+            // Diagonal derecha arriba
+            xReference = x;
+            yReference = y;
+            for(int i = xReference; i < tilesX; i++) {
+                if(!listViewEquals.getItems().contains(new HPoint(i, yReference)))
+                    listEqualsCoords.add(new HPoint(i, yReference));
+
+                yReference = yReference - 1;
+            }
+
+            // Diagonal izquierda arriba
+            xReference = x;
+            yReference = y;
+            for(int i = xReference; i >= 0; i--) {
+                if(!listViewEquals.getItems().contains(new HPoint(i, yReference)))
+                    listEqualsCoords.add(new HPoint(i, yReference));
+
+                yReference = yReference - 1;
+            }
+
+            // Diagonal derecha abajo
+            xReference = x;
+            yReference = y;
+            for(int i = xReference; i < tilesX; i++) {
+                if(!listViewEquals.getItems().contains(new HPoint(i, yReference)))
+                    listEqualsCoords.add(new HPoint(i, yReference));
+
+                yReference = yReference + 1;
+            }
+
+            Platform.runLater(()-> listViewEquals.getItems().addAll(listEqualsCoords));
+            hMessage.setBlocked(true);  checkListEqual.setSelected(false);
         }
         else if(radioVertical.isSelected() && checkListEqual.isSelected()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
             ArrayList<HPoint> listEqualsCoords = new ArrayList<>();

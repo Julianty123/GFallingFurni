@@ -28,20 +28,21 @@
                <CheckBox fx:id="checkSquareTo" layoutX="58.0" layoutY="96.0" mnemonicParsing="false" text="Walk to (-1, -1)" />
             </children>
          </Pane>
-            <Pane layoutX="223.0" layoutY="18.0" prefHeight="298.0" prefWidth="199.0" style="-fx-border-color: black;">
+            <Pane layoutX="223.0" layoutY="18.0" prefHeight="313.0" prefWidth="199.0" style="-fx-border-color: black;">
                 <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" style="-fx-background-color: #363636;" text="Equals Coords" toggleGroup="$Mode" />
-                <Button layoutX="124.0" layoutY="134.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
-                <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="22.0" mnemonicParsing="false" text="Horizontal Line">
+                <Button layoutX="124.0" layoutY="160.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
+                <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" text="Horizontal Line">
                     <toggleGroup>
                         <ToggleGroup fx:id="Em" />
                     </toggleGroup>
                 </RadioButton>
-                <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="43.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
-                <RadioButton fx:id="radioTriangle" disable="true" layoutX="14.0" layoutY="65.0" mnemonicParsing="false" text="Triangle" toggleGroup="$Em" />
-                <RadioButton fx:id="radioFree" disable="true" layoutX="18.0" layoutY="236.0" mnemonicParsing="false" selected="true" text="Free" toggleGroup="$Em" />
-                <RadioButton fx:id="radioFree_WalkTo" disable="true" layoutX="45.0" layoutY="257.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
-                <CheckBox fx:id="checkListEqual" layoutX="123.0" layoutY="99.0" mnemonicParsing="false" />
-                <ListView fx:id="listViewEquals" layoutX="17.0" layoutY="99.0" prefHeight="124.0" prefWidth="98.0" />
+                <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="68.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
+                <RadioButton fx:id="radioTriangle" disable="true" layoutX="14.0" layoutY="90.0" mnemonicParsing="false" text="Triangle" toggleGroup="$Em" />
+                <RadioButton fx:id="radioFree" disable="true" layoutX="18.0" layoutY="258.0" mnemonicParsing="false" selected="true" text="Free" toggleGroup="$Em" />
+                <RadioButton fx:id="radioFree_WalkTo" disable="true" layoutX="45.0" layoutY="279.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
+                <CheckBox fx:id="checkListEqual" layoutX="123.0" layoutY="125.0" mnemonicParsing="false" />
+                <ListView fx:id="listViewEquals" layoutX="17.0" layoutY="125.0" prefHeight="124.0" prefWidth="98.0" />
+            <RadioButton fx:id="radioDiagonal" disable="true" layoutX="14.0" layoutY="26.0" mnemonicParsing="false" text="Diagonal Line" toggleGroup="$Em" />
             </Pane>
             <RadioButton fx:id="radioCurrent" layoutX="15.0" layoutY="16.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Normal" toggleGroup="$Mode" />
             <RadioButton fx:id="radioSpecificPoint" layoutX="14.0" layoutY="197.0" mnemonicParsing="false" text="Specific Point" toggleGroup="$Mode" />
