@@ -9,6 +9,7 @@ import gearth.protocol.HPacket;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -65,6 +66,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public HashSet<Integer> listSpecificFurniture = new HashSet<>();
     public HPoint startSquare = new HPoint(-1, -1);
     public HPoint endSquare = new HPoint(-1, -1);
+    public TextField txtHotkey;
+    public Label labelHotkey;
     private double xFrame, yFrame;
 
     private static final HashMap<String, String> hostToDomain = new HashMap<>();
@@ -93,17 +96,32 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     @Override
     public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
-        int key = nativeKeyEvent.getKeyCode();  // System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(key));
-        if(NativeKeyEvent.getKeyText(key).equals("Ctrl")){ // Mayús Ctrl
-            Platform.runLater(() -> { buttonStart.setText("---ON---"); buttonStart.setTextFill(Color.GREEN); });
+        String keyText = NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode());
+        if(txtHotkey.isFocused()){    // if any of the controls have the focus...
+            Platform.runLater(()-> {
+                txtHotkey.setText(keyText);
+                labelHotkey.setText(String.format("Hold [%s] to turn on", keyText));
+                buttonStart.requestFocus(); // Gives focus to Control, solves bug wtf
+            });
+        }
+        else{
+            if(txtHotkey.getText().equals(keyText)){
+                Platform.runLater(() -> {
+                    buttonStart.setText("---ON---");
+                    buttonStart.setTextFill(Color.GREEN);
+                });
+            }
         }
     }
 
     @Override
     public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
-        int key = nativeKeyEvent.getKeyCode();  // System.out.println("Key Pressed: " + NativeKeyEvent.getKeyText(key));
-        if(NativeKeyEvent.getKeyText(key).equals("Ctrl")){ // Mayús Ctrl
-            Platform.runLater(this::turnOffButton);
+        String keyText = NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode());
+        if(keyText.equals(txtHotkey.getText())){
+            Platform.runLater(()-> {
+                turnOffButton();
+                buttonStart.requestFocus(); // Gives focus to Control, solves bug wtf
+            });
         }
     }
 
