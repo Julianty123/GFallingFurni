@@ -9,12 +9,15 @@ import gearth.protocol.HPacket;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.paint.Color;
 
+import javafx.stage.Stage;
 import org.jnativehook.GlobalScreen;
 import org.jnativehook.NativeHookException;
 import org.jnativehook.keyboard.NativeKeyEvent;
@@ -40,6 +43,7 @@ import java.util.logging.LogManager;
 public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public AnchorPane anchorPane;
+    public RadioButton radioDiagonal;
     public CheckBox checkListEqual;
     public ListView<HPoint> listViewEquals;
     public Label labelStatus;
@@ -61,6 +65,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public HashSet<Integer> listSpecificFurniture = new HashSet<>();
     public HPoint startSquare = new HPoint(-1, -1);
     public HPoint endSquare = new HPoint(-1, -1);
+    private double xFrame, yFrame;
 
     private static final HashMap<String, String> hostToDomain = new HashMap<>();
     static {
@@ -82,8 +87,6 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         mapPoisonClassnameToUniqueId.put("hween13_tile2", -1);  // Teleport pica negra
         mapPoisonClassnameToUniqueId.put("bb_rnd_tele", -1); // Teleport banzai
     }
-
-    public RadioButton radioDiagonal;
 
     @Override
     public void nativeKeyTyped(NativeKeyEvent nativeKeyEvent) {}
@@ -541,6 +544,26 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public void handleEraseEqualsCoords(ActionEvent actionEvent) {
         listViewEquals.getItems().clear();
+    }
+
+    public void onMinimize(ActionEvent event) {
+        Stage stage = (Stage) ((Node)event.getSource()).getScene().getWindow();
+        stage.setIconified(true);
+    }
+
+    public void onClose(ActionEvent event) {
+        primaryStage.close();
+    }
+
+    public void onMouseDragged(MouseEvent mouseEvent) {
+        Stage stage = (Stage) ((Node)mouseEvent.getSource()).getScene().getWindow();
+        stage.setX(mouseEvent.getScreenX() - xFrame);
+        stage.setY(mouseEvent.getScreenY() - yFrame);
+    }
+
+    public void onMousePressed(MouseEvent mouseEvent) {
+        xFrame = mouseEvent.getSceneX();
+        yFrame = mouseEvent.getSceneY();
     }
 }
 

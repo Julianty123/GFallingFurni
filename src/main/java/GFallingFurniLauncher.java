@@ -8,7 +8,12 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+
+import java.io.InputStream;
 
 public class GFallingFurniLauncher extends ExtensionFormCreator {
 
@@ -18,22 +23,25 @@ public class GFallingFurniLauncher extends ExtensionFormCreator {
         Parent root = loader.load();
 
         stage.setTitle("GFallingFurni");
+        stage.initStyle(StageStyle.TRANSPARENT);
+//        stage.getScene().setFill(Color.TRANSPARENT);
         stage.setScene(new Scene(root));
         stage.setResizable(false);
         stage.setAlwaysOnTop(true);
 
-//        Theme defaultTheme = ThemeFactory.themeForTitle("G-Earth Dark"); // ThemeFactory.getDefaultTheme()
-//        DefaultTitleBarConfig config = new DefaultTitleBarConfig(stage, defaultTheme) {
-//            public boolean displayThemePicker() {
-//                return false; // For show bar themes (I like to be redundant)
-//            }
-//        };
-//
-//        TitleBarController.create(stage, config); // Idk implementation, but applies the theme to the bar
-//        Platform.runLater(() -> {
-//            stage.getScene().getRoot().getStyleClass().add(defaultTheme.title().replace(" ", "-").toLowerCase());
-//            stage.getScene().getRoot().getStyleClass().add(defaultTheme.isDark() ? "g-dark" : "g-light");
-//        });
+        // Ugly way to set the icon (from IDE or from CMD is a headache) >:(
+//        String pathName = "/C:/Users/User/IdeaProjects/MazeProgrammer/src/main/resources/imageJ.jfif";
+//        File file = new File(pathName);
+//        if (file.exists())
+//            primaryStage.getIcons().add(new Image(file.toURI().toString()));
+
+        // Best way to set the icon (Works in both IDE and compiled application)
+        String resourceName = "imageJ.jfif";
+        InputStream inputStream = GFallingFurniLauncher.class.getClassLoader().getResourceAsStream(resourceName);
+        if (inputStream != null) {
+            Image image = new Image(inputStream);
+            stage.getIcons().add(image);
+        }
 
         return loader.getController();
     }
