@@ -9,7 +9,6 @@ import gearth.protocol.HPacket;
 
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.Event;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.control.Button;
@@ -48,8 +47,10 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public CheckBox checkListEqual;
     public ListView<HPoint> listViewEquals;
     public Label labelStatus;
+    public Label labelHotkey;
     public ToggleGroup Mode, Em;
     public TextField fieldDelay;
+    public TextField txtHotkey;
     public Button buttonStart, buttonDeleteSpecific;
     public CheckBox checkSquare, checkSquareTo, checkPoison, checkAutoDisable, checkSpecificPoint, cbSpecificFurniture;
     public RadioButton radioVertical, radioHorizontal, radioTriangle, radioSquare, radioSquareTo,
@@ -60,14 +61,14 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public String yourName;
     public int yourIndex = -1;
     public int userId, xFurniture, yFurniture, xSpecificPoint, ySpecificPoint;
+    public int tilesX;
+    public int tilesY;
 
     public ArrayList<String> squareSelected = new ArrayList<>();
     public HashSet<Integer> listPoisonFurniture = new HashSet<>(); // HashSet dont allow duplicates elements
     public HashSet<Integer> listSpecificFurniture = new HashSet<>();
     public HPoint startSquare = new HPoint(-1, -1);
     public HPoint endSquare = new HPoint(-1, -1);
-    public TextField txtHotkey;
-    public Label labelHotkey;
     private double xFrame, yFrame;
 
     private static final HashMap<String, String> hostToDomain = new HashMap<>();
@@ -162,10 +163,6 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         GlobalScreen.removeNativeKeyListener(this);
     }
 
-
-    public int tilesX;
-    public int tilesY;
-
     @Override
     protected void initExtension() {
         onConnect((host, port, APIVersion, versionClient, client) -> getGameData(host)); // Example: host = game-fr.habbo.com
@@ -206,25 +203,25 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         });
 
         intercept(HMessage.Direction.TOCLIENT, "HeightMap",  hMsg -> tilesX = hMsg.getPacket().readInteger()); // Number of tiles
-        intercept(HMessage.Direction.TOCLIENT, "FloorHeightMap", this::handleFloorHeightMap);
-        intercept(HMessage.Direction.TOCLIENT, "UserObject", this::interceptUserObject); // When InfoRetrieve is sent to the server
-        intercept(HMessage.Direction.TOCLIENT, "Expression", this::interceptExpression); // Response of packet AvatarExpression
+        intercept(HMessage.Direction.TOCLIENT, "FloorHeightMap", this::InFloorHeightMap);
+        intercept(HMessage.Direction.TOCLIENT, "UserObject", this::InUserObject); // When InfoRetrieve is sent to the server
+        intercept(HMessage.Direction.TOCLIENT, "Expression", this::InExpression); // Response of packet AvatarExpression
 
         intercept(HMessage.Direction.TOSERVER, "ClickFurni", this::methodOneOrDoubleClick);
         intercept(HMessage.Direction.TOSERVER, "UseFurniture", this::methodOneOrDoubleClick);
 
-        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", this::interceptMoveAvatar);
-        intercept(HMessage.Direction.TOCLIENT, "Users", this::interceptUsers); // Intercept this packet when any user enters the room
-        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", this::interceptUserUpdate); // Intercepts when users walking in the room
-        intercept(HMessage.Direction.TOCLIENT, "Objects", this::handleObjects);
+        intercept(HMessage.Direction.TOSERVER, "MoveAvatar", this::OutMoveAvatar);
+        intercept(HMessage.Direction.TOCLIENT, "Users", this::InUsers); // Intercept this packet when any user enters the room
+        intercept(HMessage.Direction.TOCLIENT, "UserUpdate", this::InUserUpdate); // Intercepts when users walking in the room
+        intercept(HMessage.Direction.TOCLIENT, "Objects", this::InObjects);
 
-        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::doSomething); // Intercepts when the furniture is added
-        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::doSomething); // Intercepts when the furniture is moved
+        intercept(HMessage.Direction.TOCLIENT, "ObjectAdd", this::InObject); // Intercepts when the furniture is added
+        intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::InObject); // Intercepts when the furniture is moved
 
-        intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::interceptSlideObjectBundle); // Intercepts when the furniture is moved with wired
+        intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::InSlideObjectBundle); // Intercepts when the furniture is moved with wired
     }
 
-    private void interceptSlideObjectBundle(HMessage hMessage) {
+    private void InSlideObjectBundle(HMessage hMessage) {
         if("---ON---".equals(buttonStart.getText())){
             int oldX = hMessage.getPacket().readInteger();  int oldY = hMessage.getPacket().readInteger();
             xFurniture = hMessage.getPacket().readInteger();    yFurniture = hMessage.getPacket().readInteger();
@@ -236,7 +233,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
     }
 
-    private void interceptMoveAvatar(HMessage hMessage) {
+    private void OutMoveAvatar(HMessage hMessage) {
         int x = hMessage.getPacket().readInteger();
         int y = hMessage.getPacket().readInteger();
 
@@ -246,6 +243,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             hMessage.setBlocked(true);
             checkSpecificPoint.setSelected(false);
         }
+
+        if(cbSpecificFurniture.isSelected()) hMessage.setBlocked(true);
         if(checkPoison.isSelected()) hMessage.setBlocked(true);
 
         if(checkSquare.isSelected()){
@@ -361,7 +360,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
     }
 
-    private void interceptUsers(HMessage hMessage) {
+    private void InUsers(HMessage hMessage) {
         try {
             HPacket hPacket = hMessage.getPacket();
             HEntity[] roomUsersList = HEntity.parse(hPacket);
@@ -371,7 +370,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         } catch (Exception ignored) { }
     }
 
-    private void interceptUserUpdate(HMessage hMessage) {
+    private void InUserUpdate(HMessage hMessage) {
         HPacket hPacket = hMessage.getPacket();
         for (HEntityUpdate hEntityUpdate: HEntityUpdate.parse(hPacket)){
             try {
@@ -391,24 +390,24 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
     }
 
-    private void interceptExpression(HMessage hMessage) {
+    private void InExpression(HMessage hMessage) {
         // first integer: your index in room, second: animation id
         if(primaryStage.isShowing() && yourIndex == -1)  // To avoid any bug
             yourIndex = hMessage.getPacket().readInteger();
     }
 
-    private void interceptUserObject(HMessage hMessage) {
+    private void InUserObject(HMessage hMessage) {
         userId = hMessage.getPacket().readInteger();    yourName = hMessage.getPacket().readString();
     }
 
-    private void handleFloorHeightMap(HMessage hMessage){
+    private void InFloorHeightMap(HMessage hMessage){
         boolean idk1 = hMessage.getPacket().readBoolean();  int idk2 = hMessage.getPacket().readInteger();
         String map = hMessage.getPacket().readString();
         String[] floorRows = map.split("\\r");
         tilesY = floorRows.length;
     }
 
-    private void handleObjects(HMessage hMessage){
+    private void InObjects(HMessage hMessage){
         HPacket packet = hMessage.getPacket();
         for (HFloorItem hFloorItem: HFloorItem.parse(packet)){
             try{
@@ -416,7 +415,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }catch (Exception ignored){}
         }
 
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
     }
 
     private void getGameData(String host){
@@ -456,7 +455,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             if(!listPoisonFurniture.contains(furnitureId)){
                 if(!listSpecificFurniture.contains(furnitureId)){
                     listSpecificFurniture.add(furnitureId);
-                    Platform.runLater(() -> cbSpecificFurniture.setText("Specific Furnis (" + listSpecificFurniture.size() + ")"));
+                    Platform.runLater(() -> cbSpecificFurniture.setText("Specific Furnis: " + listSpecificFurniture.size()));
                     String SaySomething = "The furni has been added successfully";
                     // Packet Structure: {in:Whisper}{i:1956}{s:"Whatever thing here"}{i:0}{i:34}{i:0}{i:-1}{i:1956}
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, userId, SaySomething, 0, 34, 0, -1, userId));
@@ -471,7 +470,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             if(!listSpecificFurniture.contains(furnitureId)){
                 if(!listPoisonFurniture.contains(furnitureId)){
                     listPoisonFurniture.add(furnitureId);
-                    Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
+                    Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
                     String SaySomething = "The furni with ID "+ furnitureId +" has been added successfully";
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, userId, SaySomething, 0, 34, 0, -1, userId));
                 }
@@ -483,16 +482,15 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         }
     }
 
-    private void doSomething(HMessage hMessage) {
+    private void InObject(HMessage hMessage) {
         int furnitureId = hMessage.getPacket().readInteger();   int uniqueId = hMessage.getPacket().readInteger();
         if(mapPoisonClassnameToUniqueId.containsValue(uniqueId)) listPoisonFurniture.add(furnitureId);
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
 
         if("---ON---".equals(buttonStart.getText())){
             xFurniture = hMessage.getPacket().readInteger();    yFurniture = hMessage.getPacket().readInteger();
 
             if (listSpecificFurniture.contains(furnitureId)) sitOnTheChair();
-            else if (!listPoisonFurniture.contains(furnitureId)) sitOnTheChair();
         }
     }
 
@@ -552,12 +550,12 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public void handleErasePoisons() {
         listPoisonFurniture.clear();
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis (" + listPoisonFurniture.size() + ")"));
+        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
     }
 
     public void handleDeleteSpecific() {
         listSpecificFurniture.clear();
-        Platform.runLater(() -> cbSpecificFurniture.setText("Specific Furnis (" + listSpecificFurniture.size() + ")"));
+        Platform.runLater(() -> cbSpecificFurniture.setText("Specific Furnis: " + listSpecificFurniture.size()));
     }
 
     public void handleEraseEqualsCoords(ActionEvent actionEvent) {
