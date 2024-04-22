@@ -35,8 +35,8 @@ import java.util.logging.LogManager;
 
 @ExtensionInfo(
         Title = "GFallingFurni",
-        Description = "Classic extension, enjoy it!",
-        Version = "1.3.0",
+        Description = "Advanced extension, so enjoy it :)",
+        Version = "1.3.1",
         Author = "Julianty"
 )
 
@@ -228,8 +228,8 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             int NotUse = hMessage.getPacket().readInteger();
             int furnitureId = hMessage.getPacket().readInteger();
 
-            if (listSpecificFurniture.contains(furnitureId)) sitOnTheChair();
-            else if (!listPoisonFurniture.contains(furnitureId)) sitOnTheChair();
+            if(listPoisonFurniture.contains(furnitureId)) return; // If the furniture is on the poison list, it will not sit on it
+            sitOnTheChair(furnitureId);
         }
     }
 
@@ -265,7 +265,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 cbSquare.setSelected(false);
             }
 
-            Platform.runLater(() -> cbSquare.setText(String.format("(%d, %d) - (%d, %d)",
+            Platform.runLater(() -> cbSquare.setText(String.format("Square: (%d, %d) - (%d, %d)",
                     startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
             hMessage.setBlocked(true);
         }
@@ -275,12 +275,13 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             cbSquareTo.setSelected(false);  hMessage.setBlocked(true);
         }
         else if(rbFree.isSelected() && cbListEqual.isSelected()){
-            if(cbListEqual.isSelected()){
-                if(!listViewEquals.getItems().contains(new HPoint(x, y))) {
-                    Platform.runLater(()-> listViewEquals.getItems().add(new HPoint(x, y)));
-                }
-                hMessage.setBlocked(true);
+            if(!listViewEquals.getItems().contains(new HPoint(x, y))) {
+                Platform.runLater(()-> {
+                    listViewEquals.getItems().add(new HPoint(x, y));
+                    rbFree.setText("Free: " + listViewEquals.getItems().size());
+                });
             }
+            hMessage.setBlocked(true);
         }
         else if(rbFreeWalkTo.isSelected() && !rbFreeWalkTo.isDisable()){
             hPointFreeWalkTo = new HPoint(x, y);
@@ -489,20 +490,13 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
         if("---ON---".equals(buttonStart.getText())){
             xFurniture = hMessage.getPacket().readInteger();    yFurniture = hMessage.getPacket().readInteger();
-            if(rbAnyFurniture.isSelected()){
-                System.out.println("rbAnyFurniture");
-                if(!listPoisonFurniture.contains(furnitureId))
-                    sitOnTheChair();
-            }
-            else if(rbSpecificFurniture.isSelected()){
-                System.out.println("rbSpecificFurniture");
-                if (listSpecificFurniture.contains(furnitureId))
-                    sitOnTheChair();
-            }
+
+            if(listPoisonFurniture.contains(furnitureId)) return; // If the furniture is on the poison list, it will not sit on it
+            sitOnTheChair(furnitureId);
         }
     }
 
-    private void sitOnTheChair(){
+    private void sitOnTheChair(int furnitureId){
         // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep()
         Thread t1 = new Thread(() -> {
             try {
@@ -516,7 +510,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
             }
             else if(txtRadioButton.equals("Specific Furniture")){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                if(listSpecificFurniture.contains(furnitureId)){
+                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                }
             }
             else if(txtRadioButton.equals("Specific Point")){
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
@@ -571,6 +567,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public void handleEraseEqualsCoords(ActionEvent actionEvent) {
         listViewEquals.getItems().clear();
+        rbFree.setText("Free: 0");
     }
 
     public void onMinimize(ActionEvent event) {
