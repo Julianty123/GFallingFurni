@@ -44,17 +44,17 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public AnchorPane anchorPane;
     public RadioButton radioDiagonal;
-    public CheckBox checkListEqual;
+    public CheckBox cbListEqual;
     public ListView<HPoint> listViewEquals;
     public Label labelStatus;
     public Label labelHotkey;
     public ToggleGroup Mode, Em;
-    public TextField fieldDelay;
-    public TextField txtHotkey;
+    public TextField txtFieldDelay;
+    public TextField txtFieldHotkey;
     public Button buttonStart, buttonDeleteSpecific;
-    public CheckBox checkSquare, checkSquareTo, checkPoison, checkAutoDisable, checkSpecificPoint, cbSpecificFurniture;
-    public RadioButton radioVertical, radioHorizontal, radioTriangle, radioSquare, radioSquareTo,
-            radioEqualsCoords, radioCurrent, radioSpecificPoint, radioFree, radioFree_WalkTo;
+    public CheckBox cbSquare, cbSquareTo, cbPoisonFurniture, cbAutoDisable, cbSpecificPoint, cbSpecificFurniture;
+    public RadioButton rbVertical, rbHorizontal, rbTriangle, rbSquare, rbSquareTo,
+            rbEqualsCoords, rbAnyFurniture, rbSpecificPoint, rbFree, rbFreeWalkTo, rbSpecificFurniture;
 
     public HPoint hPointFreeWalkTo = new HPoint(-1, -1);
     public HPoint hPointSquareTo = new HPoint(-1, -1);
@@ -98,15 +98,15 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     @Override
     public void nativeKeyPressed(NativeKeyEvent nativeKeyEvent) {
         String keyText = NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode());
-        if(txtHotkey.isFocused()){    // if any of the controls have the focus...
+        if(txtFieldHotkey.isFocused()){    // if any of the controls have the focus...
             Platform.runLater(()-> {
-                txtHotkey.setText(keyText);
+                txtFieldHotkey.setText(keyText);
                 labelHotkey.setText(String.format("Hold [%s] to turn on", keyText));
                 buttonStart.requestFocus(); // Gives focus to Control, solves bug wtf
             });
         }
         else{
-            if(txtHotkey.getText().equals(keyText)){
+            if(txtFieldHotkey.getText().equals(keyText)){
                 Platform.runLater(() -> {
                     buttonStart.setText("---ON---");
                     buttonStart.setTextFill(Color.GREEN);
@@ -118,7 +118,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     @Override
     public void nativeKeyReleased(NativeKeyEvent nativeKeyEvent) {
         String keyText = NativeKeyEvent.getKeyText(nativeKeyEvent.getKeyCode());
-        if(keyText.equals(txtHotkey.getText())){
+        if(keyText.equals(txtFieldHotkey.getText())){
             Platform.runLater(()-> {
                 turnOffButton();
                 buttonStart.requestFocus(); // Gives focus to Control, solves bug wtf
@@ -151,7 +151,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     protected void onHide() {   // Runs this when the GUI is closed
         Platform.runLater(this::turnOffButton); // Platform.exit();
         listSpecificFurniture.clear(); listPoisonFurniture.clear();
-        radioCurrent.setSelected(true);
+        rbAnyFurniture.setSelected(true);
         yourIndex = -1;
 
         try {
@@ -177,28 +177,28 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             String currentTxtRadio = radioMode.getText();
 
             radioDiagonal.setDisable(!currentTxtRadio.contains("Equals"));
-            radioVertical.setDisable(!currentTxtRadio.contains("Equals"));
-            radioHorizontal.setDisable(!currentTxtRadio.contains("Equals"));
-            radioTriangle.setDisable(!currentTxtRadio.contains("Equals"));
-            radioFree.setDisable(!currentTxtRadio.contains("Equals"));
-            radioFree_WalkTo.setDisable(!currentTxtRadio.contains("Equals"));
+            rbVertical.setDisable(!currentTxtRadio.contains("Equals"));
+            rbHorizontal.setDisable(!currentTxtRadio.contains("Equals"));
+            rbTriangle.setDisable(!currentTxtRadio.contains("Equals"));
+            rbFree.setDisable(!currentTxtRadio.contains("Equals"));
+            rbFreeWalkTo.setDisable(!currentTxtRadio.contains("Equals"));
         });
 
-        radioFree_WalkTo.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue) checkListEqual.setSelected(false);
+        rbFreeWalkTo.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue) cbListEqual.setSelected(false);
         });
 
-        radioFree.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
-            if(newValue) checkListEqual.setSelected(true);
+        rbFree.selectedProperty().addListener((observableValue, oldValue, newValue) -> {
+            if(newValue) cbListEqual.setSelected(true);
         });
 
         // Runs when the text field changes!
-        fieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
+        txtFieldDelay.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                Integer.parseInt(fieldDelay.getText());
+                Integer.parseInt(txtFieldDelay.getText());
             } catch (NumberFormatException e) {
-                if(fieldDelay.getText().isEmpty()) fieldDelay.setText("1");
-                else fieldDelay.setText(oldValue);
+                if(txtFieldDelay.getText().isEmpty()) txtFieldDelay.setText("1");
+                else txtFieldDelay.setText(oldValue);
             }
         });
 
@@ -237,17 +237,17 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         int x = hMessage.getPacket().readInteger();
         int y = hMessage.getPacket().readInteger();
 
-        if(checkSpecificPoint.isSelected()){
+        if(cbSpecificPoint.isSelected()){
             xSpecificPoint = x;    ySpecificPoint = y;
-            Platform.runLater(() -> checkSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")"));
+            Platform.runLater(() -> cbSpecificPoint.setText("(" + xSpecificPoint + ", " + ySpecificPoint + ")"));
             hMessage.setBlocked(true);
-            checkSpecificPoint.setSelected(false);
+            cbSpecificPoint.setSelected(false);
         }
 
         if(cbSpecificFurniture.isSelected()) hMessage.setBlocked(true);
-        if(checkPoison.isSelected()) hMessage.setBlocked(true);
+        if(cbPoisonFurniture.isSelected()) hMessage.setBlocked(true);
 
-        if(checkSquare.isSelected()){
+        if(cbSquare.isSelected()){
             if(!startSquare.toString().equals("(-1,-1,0.0)") && !endSquare.toString().equals("(-1,-1,0.0)"))
                 startSquare = new HPoint(-1, -1);	endSquare = new HPoint(-1, -1);
 
@@ -262,32 +262,32 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                         squareSelected.add(new HPoint(xCoord, yCoord).toString());
                     }
                 }
-                checkSquare.setSelected(false);
+                cbSquare.setSelected(false);
             }
 
-            Platform.runLater(() -> checkSquare.setText(String.format("(%d, %d) - (%d, %d)",
+            Platform.runLater(() -> cbSquare.setText(String.format("(%d, %d) - (%d, %d)",
                     startSquare.getX(), startSquare.getY(), endSquare.getX(), endSquare.getY())));
             hMessage.setBlocked(true);
         }
-        else if(checkSquareTo.isSelected()){
+        else if(cbSquareTo.isSelected()){
             hPointSquareTo = new HPoint(x, y);
-            Platform.runLater(() -> checkSquareTo.setText("Walk to (" + hPointSquareTo.getX() + ", " + hPointSquareTo.getY() + ")"));
-            checkSquareTo.setSelected(false);  hMessage.setBlocked(true);
+            Platform.runLater(() -> cbSquareTo.setText("Walk to (" + hPointSquareTo.getX() + ", " + hPointSquareTo.getY() + ")"));
+            cbSquareTo.setSelected(false);  hMessage.setBlocked(true);
         }
-        else if(radioFree.isSelected() && checkListEqual.isSelected()){
-            if(checkListEqual.isSelected()){
+        else if(rbFree.isSelected() && cbListEqual.isSelected()){
+            if(cbListEqual.isSelected()){
                 if(!listViewEquals.getItems().contains(new HPoint(x, y))) {
                     Platform.runLater(()-> listViewEquals.getItems().add(new HPoint(x, y)));
                 }
                 hMessage.setBlocked(true);
             }
         }
-        else if(radioFree_WalkTo.isSelected() && !radioFree_WalkTo.isDisable()){
+        else if(rbFreeWalkTo.isSelected() && !rbFreeWalkTo.isDisable()){
             hPointFreeWalkTo = new HPoint(x, y);
-            Platform.runLater(() -> radioFree_WalkTo.setText("Walk to (" + hPointFreeWalkTo.getX() + ", " + hPointFreeWalkTo.getY() + ")"));
-            radioFree_WalkTo.setSelected(false);   hMessage.setBlocked(true);
+            Platform.runLater(() -> rbFreeWalkTo.setText("Walk to (" + hPointFreeWalkTo.getX() + ", " + hPointFreeWalkTo.getY() + ")"));
+            rbFreeWalkTo.setSelected(false);   hMessage.setBlocked(true);
         }
-        else if(radioDiagonal.isSelected() && checkListEqual.isSelected()){
+        else if(radioDiagonal.isSelected() && cbListEqual.isSelected()){
             ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
 
             // Diagonal izquierda abajo
@@ -331,32 +331,32 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
 
             Platform.runLater(()-> listViewEquals.getItems().addAll(listEqualsCoords));
-            hMessage.setBlocked(true);  checkListEqual.setSelected(false);
+            hMessage.setBlocked(true);  cbListEqual.setSelected(false);
         }
-        else if(radioVertical.isSelected() && checkListEqual.isSelected()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
+        else if(rbVertical.isSelected() && cbListEqual.isSelected()){ // currentRadioEqualsCoords.getText().equals("Vertical Line")
             ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
             for(int i = 0; i < tilesY; i++) {
                 if(!listViewEquals.getItems().contains(new HPoint(x, i))) listEqualsCoords.add(new HPoint(x, i));
             }
             Platform.runLater(()-> listViewEquals.getItems().addAll(listEqualsCoords));
 
-            hMessage.setBlocked(true); checkListEqual.setSelected(false);
+            hMessage.setBlocked(true); cbListEqual.setSelected(false);
         }
-        else if(radioHorizontal.isSelected() && checkListEqual.isSelected()){
+        else if(rbHorizontal.isSelected() && cbListEqual.isSelected()){
             ArrayList<HPoint> listEqualsCoords = new ArrayList<>();
             for(int i = 0; i < tilesX; i++) {
                 if(!listViewEquals.getItems().contains(new HPoint(i, y))) listEqualsCoords.add(new HPoint(i, y));
             }
             Platform.runLater(()-> listViewEquals.getItems().addAll(listEqualsCoords));
 
-            hMessage.setBlocked(true); checkListEqual.setSelected(false);
+            hMessage.setBlocked(true); cbListEqual.setSelected(false);
         }
-        else if(radioTriangle.isSelected() && checkListEqual.isSelected()){
+        else if(rbTriangle.isSelected() && cbListEqual.isSelected()){
             if(!listViewEquals.getItems().contains(new HPoint(x, y))){
                 Platform.runLater(()-> listViewEquals.getItems().add(new HPoint(x, y)));
             }
 
-            hMessage.setBlocked(true); checkListEqual.setSelected(false);
+            hMessage.setBlocked(true); cbListEqual.setSelected(false);
         }
     }
 
@@ -376,7 +376,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             try {
                 int currentIndex = hEntityUpdate.getIndex();
                 // if(yourIndex == currentIndex && checkAutoDisable.isSelected())
-                if(yourIndex != currentIndex || !checkAutoDisable.isSelected()) continue;
+                if(yourIndex != currentIndex || !cbAutoDisable.isSelected()) continue;
                 HPoint currentHPoint = new HPoint(hEntityUpdate.getMovingTo().getX(), hEntityUpdate.getMovingTo().getY());
 
                 if((xFurniture == currentHPoint.getX() && yFurniture == currentHPoint.getY()) ||
@@ -415,7 +415,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }catch (Exception ignored){}
         }
 
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
+        Platform.runLater(() -> cbPoisonFurniture.setText("Poison Furnis: " + listPoisonFurniture.size()));
     }
 
     private void getGameData(String host){
@@ -466,11 +466,11 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, userId, SaySomething, 0, 34, 0, -1, userId));
             }
         }
-        if(checkPoison.isSelected()){
+        if(cbPoisonFurniture.isSelected()){
             if(!listSpecificFurniture.contains(furnitureId)){
                 if(!listPoisonFurniture.contains(furnitureId)){
                     listPoisonFurniture.add(furnitureId);
-                    Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
+                    Platform.runLater(() -> cbPoisonFurniture.setText("Poison Furnis: " + listPoisonFurniture.size()));
                     String SaySomething = "The furni with ID "+ furnitureId +" has been added successfully";
                     sendToClient(new HPacket("Whisper", HMessage.Direction.TOCLIENT, userId, SaySomething, 0, 34, 0, -1, userId));
                 }
@@ -485,12 +485,20 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     private void InObject(HMessage hMessage) {
         int furnitureId = hMessage.getPacket().readInteger();   int uniqueId = hMessage.getPacket().readInteger();
         if(mapPoisonClassnameToUniqueId.containsValue(uniqueId)) listPoisonFurniture.add(furnitureId);
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
+        Platform.runLater(() -> cbPoisonFurniture.setText("Poison Furnis: " + listPoisonFurniture.size()));
 
         if("---ON---".equals(buttonStart.getText())){
             xFurniture = hMessage.getPacket().readInteger();    yFurniture = hMessage.getPacket().readInteger();
-
-            if (listSpecificFurniture.contains(furnitureId)) sitOnTheChair();
+            if(rbAnyFurniture.isSelected()){
+                System.out.println("rbAnyFurniture");
+                if(!listPoisonFurniture.contains(furnitureId))
+                    sitOnTheChair();
+            }
+            else if(rbSpecificFurniture.isSelected()){
+                System.out.println("rbSpecificFurniture");
+                if (listSpecificFurniture.contains(furnitureId))
+                    sitOnTheChair();
+            }
         }
     }
 
@@ -498,36 +506,39 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         // A thread is created, this is necessary to avoid "Lagging" when its used the Thread.Sleep()
         Thread t1 = new Thread(() -> {
             try {
-                Thread.sleep(Integer.parseInt(fieldDelay.getText())); // The time that the thread will sleep
+                Thread.sleep(Integer.parseInt(txtFieldDelay.getText())); // The time that the thread will sleep
             }catch (InterruptedException ignored){}
 
-            RadioButton radioCurrent = (RadioButton) Mode.getSelectedToggle();
-            String txtRadio = radioCurrent.getText();
+            RadioButton rbSelected = (RadioButton) Mode.getSelectedToggle();
+            String txtRadioButton = rbSelected.getText();
 
-            if(txtRadio.equals("Normal")){
+            if(txtRadioButton.equals("Any Furniture")){
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
             }
-            else if(txtRadio.contains("Equals")){
+            else if(txtRadioButton.equals("Specific Furniture")){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+            }
+            else if(txtRadioButton.equals("Specific Point")){
+                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
+            }
+            else if(txtRadioButton.contains("Equals Coords")){ // Equals
                 for(HPoint equalsCoords: listViewEquals.getItems()){
                     if(xFurniture == equalsCoords.getX() && yFurniture == equalsCoords.getY()){
-                        if(radioFree.isSelected()){
+                        if(rbFree.isSelected()){
                             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, hPointFreeWalkTo.getX(), hPointFreeWalkTo.getY()));
                         }
-                        else{ // Horizontal, vertical or Triangle, i think
+                        else{ // Horizontal, Vertical, Diagonal or Triangle, i think
                             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
                         }
                         break;
                     }
                 }
             }
-            else if(txtRadio.equals("Specific")){
-                sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
-            }
-            else if(txtRadio.equals("Square")){
+            else if(txtRadioButton.equals("Square")){
                 if(squareSelected.contains(new HPoint(xFurniture, yFurniture).toString())){
                     sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
                 }
-            } else if(txtRadio.equals("SquareTo")) {
+            } else if(txtRadioButton.equals("SquareTo")) {
                 if(squareSelected.contains(new HPoint(xFurniture, yFurniture).toString())){
                     sendToServer(new HPacket("MoveAvatar",
                             HMessage.Direction.TOSERVER, hPointSquareTo.getX(), hPointSquareTo.getY()));
@@ -550,7 +561,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public void handleErasePoisons() {
         listPoisonFurniture.clear();
-        Platform.runLater(() -> checkPoison.setText("Poison Furnis: " + listPoisonFurniture.size()));
+        Platform.runLater(() -> cbPoisonFurniture.setText("Poison Furnis: " + listPoisonFurniture.size()));
     }
 
     public void handleDeleteSpecific() {

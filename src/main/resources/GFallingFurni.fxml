@@ -16,52 +16,53 @@
     <Label fx:id="labelStatus" layoutX="1.0" layoutY="4.0" text="Connected to: " />
    <Button layoutX="429.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" text="X" />
    <Button layoutX="388.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onMinimize" prefHeight="32.0" prefWidth="41.0" text="-" />
-   <TabPane layoutY="31.0" prefHeight="503.0" prefWidth="461.0" tabClosingPolicy="UNAVAILABLE">
+   <TabPane layoutY="31.0" prefHeight="508.0" prefWidth="461.0" tabClosingPolicy="UNAVAILABLE">
      <tabs>
        <Tab text="General">
          <content>
            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                   <children>
-                      <Label layoutX="134.0" layoutY="19.0" text="Delay:" />
-                      <TextField fx:id="fieldDelay" alignment="TOP_CENTER" layoutX="180.0" layoutY="14.0" prefHeight="31.0" prefWidth="61.0" text="300" />
-                      <Pane layoutX="14.0" layoutY="57.0" prefHeight="387.0" prefWidth="434.0" style="-fx-border-color: black;">
+                      <Label layoutX="134.0" layoutY="11.0" text="Delay:" />
+                      <TextField fx:id="txtFieldDelay" alignment="TOP_CENTER" layoutX="180.0" layoutY="6.0" prefHeight="31.0" prefWidth="61.0" text="300" />
+                      <Pane layoutX="14.0" layoutY="47.0" prefHeight="398.0" prefWidth="434.0" style="-fx-border-color: black;">
                           <children>
-                           <Pane layoutX="10.0" layoutY="249.0" prefHeight="131.0" prefWidth="199.0" style="-fx-border-color: black;">
+                           <Pane layoutX="10.0" layoutY="256.0" prefHeight="131.0" prefWidth="199.0" style="-fx-border-color: black;">
                               <children>
-                                    <RadioButton fx:id="radioSquare" layoutX="32.0" layoutY="38.0" mnemonicParsing="false" text="Square">
+                                    <RadioButton fx:id="rbSquare" layoutX="32.0" layoutY="38.0" mnemonicParsing="false" text="Square">
                                     <toggleGroup>
                                              <ToggleGroup fx:id="Mode" />
                                     </toggleGroup>
                                  </RadioButton>
-                                    <CheckBox fx:id="checkSquare" layoutX="11.0" layoutY="8.0" mnemonicParsing="false" text="(-1, -1) - (-1, -1)" />
-                                    <RadioButton fx:id="radioSquareTo" layoutX="32.0" layoutY="66.0" mnemonicParsing="false" text="SquareTo" toggleGroup="$Mode" />
-                                 <CheckBox fx:id="checkSquareTo" layoutX="58.0" layoutY="96.0" mnemonicParsing="false" text="Walk to (-1, -1)" />
+                                    <CheckBox fx:id="cbSquare" layoutX="11.0" layoutY="8.0" mnemonicParsing="false" text="(-1, -1) - (-1, -1)" />
+                                    <RadioButton fx:id="rbSquareTo" layoutX="32.0" layoutY="66.0" mnemonicParsing="false" text="SquareTo" toggleGroup="$Mode" />
+                                 <CheckBox fx:id="cbSquareTo" layoutX="58.0" layoutY="96.0" mnemonicParsing="false" text="Walk to (-1, -1)" />
                               </children>
                            </Pane>
                               <Pane layoutX="223.0" layoutY="18.0" prefHeight="313.0" prefWidth="199.0" style="-fx-border-color: black;">
-                                  <RadioButton fx:id="radioEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" text="Equals Coords" toggleGroup="$Mode" />
+                                  <RadioButton fx:id="rbEqualsCoords" layoutX="17.0" layoutY="-10.0" mnemonicParsing="false" text="Equals Coords" toggleGroup="$Mode" />
                                   <Button layoutX="124.0" layoutY="160.0" mnemonicParsing="false" onAction="#handleEraseEqualsCoords" text="Erase" />
-                                  <RadioButton fx:id="radioHorizontal" disable="true" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" text="Horizontal Line">
+                                  <RadioButton fx:id="rbHorizontal" disable="true" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" text="Horizontal Line">
                                       <toggleGroup>
                                           <ToggleGroup fx:id="Em" />
                                       </toggleGroup>
                                   </RadioButton>
-                                  <RadioButton fx:id="radioVertical" disable="true" layoutX="14.0" layoutY="68.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
-                                  <RadioButton fx:id="radioTriangle" disable="true" layoutX="14.0" layoutY="90.0" mnemonicParsing="false" text="Triangle" toggleGroup="$Em" />
-                                  <RadioButton fx:id="radioFree" disable="true" layoutX="18.0" layoutY="258.0" mnemonicParsing="false" selected="true" text="Free" toggleGroup="$Em" />
-                                  <RadioButton fx:id="radioFree_WalkTo" disable="true" layoutX="45.0" layoutY="279.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
-                                  <CheckBox fx:id="checkListEqual" layoutX="123.0" layoutY="125.0" mnemonicParsing="false" />
+                                  <RadioButton fx:id="rbVertical" disable="true" layoutX="14.0" layoutY="68.0" mnemonicParsing="false" text="Vertical Line" toggleGroup="$Em" />
+                                  <RadioButton fx:id="rbTriangle" disable="true" layoutX="14.0" layoutY="90.0" mnemonicParsing="false" text="Triangle" toggleGroup="$Em" />
+                                  <RadioButton fx:id="rbFree" disable="true" layoutX="18.0" layoutY="258.0" mnemonicParsing="false" selected="true" text="Free" toggleGroup="$Em" />
+                                  <RadioButton fx:id="rbFreeWalkTo" disable="true" layoutX="45.0" layoutY="279.0" mnemonicParsing="false" text="Walk to (-1, -1)" toggleGroup="$Em" />
+                                  <CheckBox fx:id="cbListEqual" layoutX="123.0" layoutY="125.0" mnemonicParsing="false" />
                                   <ListView fx:id="listViewEquals" layoutX="17.0" layoutY="125.0" prefHeight="124.0" prefWidth="98.0" />
                               <RadioButton fx:id="radioDiagonal" disable="true" layoutX="14.0" layoutY="26.0" mnemonicParsing="false" text="Diagonal Line" toggleGroup="$Em" />
                               </Pane>
-                              <RadioButton fx:id="radioCurrent" layoutX="15.0" layoutY="16.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Normal" toggleGroup="$Mode" />
-                              <RadioButton fx:id="radioSpecificPoint" layoutX="14.0" layoutY="197.0" mnemonicParsing="false" text="Specific Point" toggleGroup="$Mode" />
-                              <CheckBox fx:id="checkSpecificPoint" layoutX="42.0" layoutY="220.0" mnemonicParsing="false" text="(0, 0)" />
-                              <CheckBox fx:id="checkPoison" layoutX="14.0" layoutY="47.0" mnemonicParsing="false" text="Poison Furnis: 0" />
-                              <Button layoutX="14.0" layoutY="115.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="21.0" prefWidth="138.0" text="Erase Poisons" />
-                              <Button fx:id="buttonDeleteSpecific" layoutX="14.0" layoutY="154.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="31.0" prefWidth="178.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
-                              <CheckBox fx:id="cbSpecificFurniture" layoutX="14.0" layoutY="76.0" mnemonicParsing="false" text="Specific Furnis: 0" />
+                              <RadioButton fx:id="rbAnyFurniture" layoutX="15.0" layoutY="11.0" mnemonicParsing="false" pickOnBounds="false" selected="true" text="Any Furniture" toggleGroup="$Mode" />
+                              <RadioButton fx:id="rbSpecificPoint" layoutX="14.0" layoutY="199.0" mnemonicParsing="false" text="Specific Point" toggleGroup="$Mode" />
+                              <CheckBox fx:id="cbSpecificPoint" layoutX="42.0" layoutY="222.0" mnemonicParsing="false" text="(0, 0)" />
+                              <CheckBox fx:id="cbPoisonFurniture" layoutX="34.0" layoutY="34.0" mnemonicParsing="false" text="Poison Furnis: 0" />
+                              <Button layoutX="14.0" layoutY="121.0" mnemonicParsing="false" onAction="#handleErasePoisons" prefHeight="21.0" prefWidth="138.0" text="Erase Poisons" />
+                              <Button fx:id="buttonDeleteSpecific" layoutX="14.0" layoutY="160.0" mnemonicParsing="false" onAction="#handleDeleteSpecific" prefHeight="31.0" prefWidth="178.0" text="Erase Specific Furnis" textAlignment="CENTER" wrapText="true" />
+                              <CheckBox fx:id="cbSpecificFurniture" layoutX="34.0" layoutY="89.0" mnemonicParsing="false" text="Specific Furnis: 0" />
                               <Label layoutX="14.0" layoutY="-10.0" text="Mode" />
+                           <RadioButton fx:id="rbSpecificFurniture" layoutX="14.0" layoutY="67.0" mnemonicParsing="false" text="Specific Furniture" toggleGroup="$Mode" />
                           </children>
                       </Pane>
                   </children>
@@ -73,14 +74,14 @@
            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                   <children>
                      <Label layoutX="41.0" layoutY="50.0" text="On/Off Bot:" />
-                     <TextField fx:id="txtHotkey" alignment="TOP_LEFT" layoutX="138.0" layoutY="44.0" prefHeight="33.0" prefWidth="87.0" text="Mayús" />
+                     <TextField fx:id="txtFieldHotkey" alignment="TOP_LEFT" layoutX="138.0" layoutY="44.0" prefHeight="33.0" prefWidth="87.0" text="Mayús" />
                   </children>
                </AnchorPane>
          </content>
        </Tab>
      </tabs>
    </TabPane>
-    <Button fx:id="buttonStart" layoutX="14.0" layoutY="559.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="31.0" prefWidth="116.0" text="---OFF---" textFill="RED" />
-    <Label fx:id="labelHotkey" layoutX="14.0" layoutY="534.0" text="Hold [Mayús] to turn on" />
-    <CheckBox fx:id="checkAutoDisable" layoutX="151.0" layoutY="564.0" mnemonicParsing="false" text="Auto disable when you sit" />
+    <Button fx:id="buttonStart" layoutX="14.0" layoutY="566.0" mnemonicParsing="false" onAction="#handleButtonStart" prefHeight="31.0" prefWidth="116.0" text="---OFF---" textFill="RED" />
+    <Label fx:id="labelHotkey" layoutX="14.0" layoutY="541.0" text="Hold [Mayús] to turn on" />
+    <CheckBox fx:id="cbAutoDisable" layoutX="151.0" layoutY="571.0" mnemonicParsing="false" text="Auto disable when you sit" />
 </AnchorPane>
