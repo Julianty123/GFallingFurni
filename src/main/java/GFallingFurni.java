@@ -52,9 +52,9 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     public TextField txtFieldDelay;
     public TextField txtFieldHotkey;
     public Button buttonStart, buttonDeleteSpecific;
-    public CheckBox cbSquare, cbSquareTo, cbPoisonFurniture, cbAutoDisable, cbSpecificPoint, cbSpecificFurniture;
+    public CheckBox cbSquare, cbSquareTo, cbPoisonFurniture, cbAutoDisable, cbSpecificPoint, cbSpecificFurniture, cbApplyForAnyMode;
     public RadioButton rbVertical, rbHorizontal, rbTriangle, rbSquare, rbSquareTo,
-            rbEqualsCoords, rbAnyFurniture, rbSpecificPoint, rbFree, rbFreeWalkTo, rbSpecificFurniture;
+            rbEqualsCoords, rbNormal, rbSpecificPoint, rbFree, rbFreeWalkTo;
 
     public HPoint hPointFreeWalkTo = new HPoint(-1, -1);
     public HPoint hPointSquareTo = new HPoint(-1, -1);
@@ -151,7 +151,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
     protected void onHide() {   // Runs this when the GUI is closed
         Platform.runLater(this::turnOffButton); // Platform.exit();
         listSpecificFurniture.clear(); listPoisonFurniture.clear();
-        rbAnyFurniture.setSelected(true);
+        rbNormal.setSelected(true);
         yourIndex = -1;
 
         try {
@@ -506,24 +506,49 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             RadioButton rbSelected = (RadioButton) Mode.getSelectedToggle();
             String txtRadioButton = rbSelected.getText();
 
-            if(txtRadioButton.equals("Any Furniture")){
+            if(txtRadioButton.equals("Normal")){
+                // Looks redundant but its necessary
+                if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                    if(listSpecificFurniture.contains(furnitureId)){
+                        sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                    }
+                    else return;
+                }
+
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
             }
-            else if(txtRadioButton.equals("Specific Furniture")){
-                if(listSpecificFurniture.contains(furnitureId)){
-                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
-                }
-            }
             else if(txtRadioButton.equals("Specific Point")){
+                if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                    if(listSpecificFurniture.contains(furnitureId)){
+                        sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
+                    }
+                    else return;
+                }
+
                 sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xSpecificPoint, ySpecificPoint));
             }
             else if(txtRadioButton.contains("Equals Coords")){ // Equals
                 for(HPoint equalsCoords: listViewEquals.getItems()){
                     if(xFurniture == equalsCoords.getX() && yFurniture == equalsCoords.getY()){
                         if(rbFree.isSelected()){
+                            if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                                if(listSpecificFurniture.contains(furnitureId)){
+                                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, hPointFreeWalkTo.getX(), hPointFreeWalkTo.getY()));
+                                }
+                                else return;
+                            }
+
                             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, hPointFreeWalkTo.getX(), hPointFreeWalkTo.getY()));
                         }
-                        else{ // Horizontal, Vertical, Diagonal or Triangle, i think
+                        else{ // Diagonal, Horizontal, Vertical or Triangle...
+
+                            if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                                if(listSpecificFurniture.contains(furnitureId)){
+                                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                                }
+                                else return;
+                            }
+
                             sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
                         }
                         break;
@@ -532,12 +557,25 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
             }
             else if(txtRadioButton.equals("Square")){
                 if(squareSelected.contains(new HPoint(xFurniture, yFurniture).toString())){
+                    if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                        if(listSpecificFurniture.contains(furnitureId)){
+                            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
+                        }
+                        else return;
+                    }
+
                     sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, xFurniture, yFurniture));
                 }
             } else if(txtRadioButton.equals("SquareTo")) {
                 if(squareSelected.contains(new HPoint(xFurniture, yFurniture).toString())){
-                    sendToServer(new HPacket("MoveAvatar",
-                            HMessage.Direction.TOSERVER, hPointSquareTo.getX(), hPointSquareTo.getY()));
+                    if(cbApplyForAnyMode.isSelected()){ // Apply specific furniture for any mode
+                        if(listSpecificFurniture.contains(furnitureId)){
+                            sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, hPointSquareTo.getX(), hPointSquareTo.getY()));
+                        }
+                        else return;
+                    }
+
+                    sendToServer(new HPacket("MoveAvatar", HMessage.Direction.TOSERVER, hPointSquareTo.getX(), hPointSquareTo.getY()));
                 }
             }
         });
