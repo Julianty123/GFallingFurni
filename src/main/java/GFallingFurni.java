@@ -36,7 +36,7 @@ import java.util.logging.LogManager;
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Advanced extension, so enjoy it :)",
-        Version = "1.3.1",
+        Version = "1.3.2",
         Author = "Julianty"
 )
 
@@ -219,6 +219,28 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
         intercept(HMessage.Direction.TOCLIENT, "ObjectUpdate", this::InObject); // Intercepts when the furniture is moved
 
         intercept(HMessage.Direction.TOCLIENT, "SlideObjectBundle", this::InSlideObjectBundle); // Intercepts when the furniture is moved with wired
+        intercept(HMessage.Direction.TOCLIENT, "WiredMovements", this::InWiredMovements);
+    }
+
+    private void InWiredMovements(HMessage hMessage) {
+        if ("---ON---".equals(buttonStart.getText())) {
+            int count = hMessage.getPacket().readInteger();
+            for (int i = 0; i < count; i++) {
+                hMessage.getPacket().readInteger();
+                hMessage.getPacket().readInteger();
+                hMessage.getPacket().readInteger();
+                xFurniture = hMessage.getPacket().readInteger();
+                yFurniture = hMessage.getPacket().readInteger();
+                hMessage.getPacket().readString();
+                hMessage.getPacket().readString();
+                int furnitureId = hMessage.getPacket().readInteger();
+                hMessage.getPacket().readInteger();
+                hMessage.getPacket().readInteger();
+                if (listPoisonFurniture.contains(furnitureId))
+                    return; // If the furniture is on the poison list, it will not sit on it
+                sitOnTheChair(furnitureId);
+            }
+        }
     }
 
     private void InSlideObjectBundle(HMessage hMessage) {
