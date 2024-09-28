@@ -36,7 +36,7 @@ import java.util.logging.LogManager;
 @ExtensionInfo(
         Title = "GFallingFurni",
         Description = "Advanced extension, so enjoy it :)",
-        Version = "1.3.2",
+        Version = "1.3.3",
         Author = "Julianty"
 )
 
@@ -229,15 +229,21 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
                 hMessage.getPacket().readInteger();
                 hMessage.getPacket().readInteger();
                 hMessage.getPacket().readInteger();
-                xFurniture = hMessage.getPacket().readInteger();
-                yFurniture = hMessage.getPacket().readInteger();
+                int x = hMessage.getPacket().readInteger();
+                int y = hMessage.getPacket().readInteger();
                 hMessage.getPacket().readString();
                 hMessage.getPacket().readString();
                 int furnitureId = hMessage.getPacket().readInteger();
                 hMessage.getPacket().readInteger();
                 hMessage.getPacket().readInteger();
-                if (listPoisonFurniture.contains(furnitureId))
-                    return; // If the furniture is on the poison list, it will not sit on it
+
+                if (listPoisonFurniture.contains(furnitureId)) {
+                    continue;
+                }
+
+                xFurniture = x;
+                yFurniture = y;
+
                 sitOnTheChair(furnitureId);
             }
         }
