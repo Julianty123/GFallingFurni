@@ -40,7 +40,7 @@ import java.util.logging.LogManager;
         Author = "Julianty"
 )
 
-public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
+public class FallingFurni extends ExtensionForm implements NativeKeyListener {
 
     public AnchorPane anchorPane;
     public RadioButton radioDiagonal;
@@ -144,7 +144,7 @@ public class GFallingFurni extends ExtensionForm implements NativeKeyListener {
 
             System.exit(1);
         }
-        GlobalScreen.addNativeKeyListener(GFallingFurni.this);
+        GlobalScreen.addNativeKeyListener(FallingFurni.this);
     }
 
     @Override

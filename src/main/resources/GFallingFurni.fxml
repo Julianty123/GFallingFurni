@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.Pane?>
 
-<AnchorPane fx:id="anchorPane" onMouseDragged="#onMouseDragged" onMousePressed="#onMousePressed" prefHeight="606.0" prefWidth="461.0" stylesheets="@dark-theme.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="GFallingFurni">
+<AnchorPane fx:id="anchorPane" onMouseDragged="#onMouseDragged" onMousePressed="#onMousePressed" prefHeight="606.0" prefWidth="461.0" stylesheets="@dark-theme.css" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="FallingFurni">
     <Label fx:id="labelStatus" layoutX="1.0" layoutY="4.0" text="Connected to: " />
    <Button layoutX="429.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onClose" prefHeight="32.0" prefWidth="32.0" text="X" />
    <Button layoutX="388.0" layoutY="-2.0" mnemonicParsing="false" onAction="#onMinimize" prefHeight="32.0" prefWidth="41.0" text="-" />

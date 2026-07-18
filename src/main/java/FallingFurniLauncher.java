@@ -1,21 +1,15 @@
 import gearth.extensions.ExtensionForm;
 import gearth.extensions.ExtensionFormCreator;
-import gearth.ui.themes.Theme;
-import gearth.ui.themes.ThemeFactory;
-import gearth.ui.titlebar.DefaultTitleBarConfig;
-import gearth.ui.titlebar.TitleBarController;
-import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 
 import java.io.InputStream;
 
-public class GFallingFurniLauncher extends ExtensionFormCreator {
+public class FallingFurniLauncher extends ExtensionFormCreator {
 
     @Override
     public ExtensionForm createForm(Stage stage) throws Exception {
@@ -37,7 +31,7 @@ public class GFallingFurniLauncher extends ExtensionFormCreator {
 
         // Best way to set the icon (Works in both IDE and compiled application)
         String resourceName = "imageJ.jfif";
-        InputStream inputStream = GFallingFurniLauncher.class.getClassLoader().getResourceAsStream(resourceName);
+        InputStream inputStream = FallingFurniLauncher.class.getClassLoader().getResourceAsStream(resourceName);
         if (inputStream != null) {
             Image image = new Image(inputStream);
             stage.getIcons().add(image);
@@ -47,7 +41,6 @@ public class GFallingFurniLauncher extends ExtensionFormCreator {
     }
 
     public static void main(String[] args) {
-        runExtensionForm(args, GFallingFurniLauncher.class);
+        runExtensionForm(args, FallingFurniLauncher.class);
     }
-
 }

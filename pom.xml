@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>juliantyextensions</groupId>
-    <artifactId>GFallingFurni</artifactId>
+    <artifactId>FallingFurni</artifactId>
     <packaging>jar</packaging>
     <version>0.1</version>
 
@@ -33,7 +33,7 @@
                         <manifest>
                             <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
                             <addClasspath>true</addClasspath>
-                            <mainClass>GFallingFurniLauncher</mainClass>
+                            <mainClass>FallingFurniLauncher</mainClass>
                             <useUniqueVersions>false</useUniqueVersions>
                             <classpathPrefix>lib/</classpathPrefix>
                             <addDefaultImplementationEntries>false</addDefaultImplementationEntries>
@@ -58,7 +58,7 @@
                     <outputDirectory>${project.build.directory}/bin</outputDirectory>
                     <archive>
                         <manifest>
-                            <mainClass>GFallingFurniLauncher</mainClass>
+                            <mainClass>FallingFurniLauncher</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
@@ -100,7 +100,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <version>2.11.0</version>
+            <version>2.14.0</version>
         </dependency>
     </dependencies>
 </project>
