@@ -34,7 +34,7 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.logging.LogManager;
 
 @ExtensionInfo(
-        Title = "GFallingFurni",
+        Title = "FallingFurni",
         Description = "Advanced extension, so enjoy it :)",
         Version = "1.3.3",
         Author = "Julianty"
